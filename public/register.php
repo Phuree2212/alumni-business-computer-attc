@@ -441,6 +441,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Initialize form handlers
     ['alumniForm', 'studentForm'].forEach(handleFormSubmit);
+    
   </script>
 </body>
 

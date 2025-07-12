@@ -6,7 +6,25 @@ require_once '../../../classes/image_uploader.php';
 $db = new Database();
 $conn = $db->connect();
 
-$Teacher = new Admin($conn, 'teacher');
+$teacher = new Admin($conn, 'teacher');
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+    $first_name = $_POST['first_name'];
+    $last_name = $_POST['last_name'];
+    $email = $_POST['email'];
+    $phone = $_POST['phone'];
+    $position = $_POST['position'];
+
+    $image = $_FILES['image'];
+
+    $result = $teacher->create($username, $password, $email, $first_name, $last_name, $phone, $position, $image);
+
+    echo json_encode($result);
+
+    exit;
+}
 
 ?>
 <!DOCTYPE html>
@@ -28,7 +46,7 @@ $Teacher = new Admin($conn, 'teacher');
     <?php include '../../includes/sidebar.php' ?>
 
     <div class="main-content">
-        <form id="editForm" enctype="multipart/form-data">
+        <form id="createForm" enctype="multipart/form-data">
             <div class="card-body">
                 <h3 class="h3 mb-4 text-success">สร้างข้อมูล ครู/อาจารย์ ใหม่</h3>
                 <div class="row">
@@ -48,17 +66,20 @@ $Teacher = new Admin($conn, 'teacher');
                     <div class="col-md-8">
                         <div class="mb-3">
                             <label class="form-label">ชื่อผู้ใช้งาน</label>
-                            <input type="email" class="form-control" id="username" name="username" required>
+                            <input type="username" class="form-control" id="username" name="username">
+                            <div class="invalid-feedback"></div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">รหัสผ่าน</label>
-                                <input type="text" class="form-control" id="password" name="password" required>
+                                <input type="password" class="form-control" id="password" name="password">
+                                <div class="invalid-feedback"></div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">ยืนยันรหัสผ่าน</label>
-                                <input type="text" class="form-control" id="confirmPassword" name="confirm_password" required>
+                                <input type="password" class="form-control" id="confirmPassword" name="confirm_password">
+                                <div class="invalid-feedback"></div>
                             </div>
 
                         </div>
@@ -66,33 +87,38 @@ $Teacher = new Admin($conn, 'teacher');
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">ชื่อ</label>
-                                <input type="text" class="form-control" id="firstName" name="first_name" required>
+                                <input type="text" class="form-control" id="firstName" name="first_name">
+                                <div class="invalid-feedback"></div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">นามสกุล</label>
-                                <input type="text" class="form-control" id="lastName" name="last_name" required>
+                                <input type="text" class="form-control" id="lastName" name="last_name">
+                                <div class="invalid-feedback"></div>
                             </div>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">อีเมล</label>
-                            <input type="email" class="form-control" id="email" name="email" required>
+                            <input type="email" class="form-control" id="email" name="email">
+                            <div class="invalid-feedback"></div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">เบอร์โทรศัพท์</label>
-                                <input type="tel" class="form-control" id="phone" name="phone" required>
+                                <input type="tel" class="form-control" id="phone" name="phone">
+                                <div class="invalid-feedback"></div>
                             </div>
 
                             <div class="col-md-6 mb-5">
                                 <label class="form-label">ตำแหน่ง</label>
-                                <select class="form-select" name="position" id="position" required>
+                                <select class="form-select" name="position" id="position">
                                     <option value="">เลือก</option>
                                     <option value="หัวหน้าแผนกวิชา">หัวหน้าแผนกวิชา</option>
                                     <option value="ครูผู้ช่วย">ครูผู้ช่วย</option>
                                     <option value="ครูอัตราจ้าง">ครูอัตราจ้าง</option>
                                 </select>
+                                <div class="invalid-feedback"></div>
                             </div>
                         </div>
 
@@ -114,10 +140,11 @@ $Teacher = new Admin($conn, 'teacher');
     <script src="../../../assets/js/sweetalert2.all.min.js"></script>
     <script src="../../../assets/js/script_admin.js"></script>
     <script src="../../../assets/alerts/modal.js"></script>
+    <script src="../../../assets/js/function/validate_form.js"></script>
     <script>
-        //แสดงภาพตัวอย่างเมื่อเลือกรูปโปรไฟล์
         const input = document.getElementById('profilePic');
 
+        //แสดงภาพตัวอย่างเมื่อเลือกรูปโปรไฟล์
         input.addEventListener('change', function() {
             const file = this.files[0];
 
@@ -131,6 +158,88 @@ $Teacher = new Admin($conn, 'teacher');
                 reader.readAsDataURL(file);
             }
         });
+
+        //ตรวจสอบความถูกต้องของฟอร์ม
+        const form = document.getElementById('createForm');
+
+        function validateForm() {
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData);
+
+            let isValid = true;
+
+            if (!data.username) {
+                showFieldError('username', 'กรุณากรอกชื่อผู้ใช้งาน');
+                isValid = false;
+            }
+
+            if (!data.first_name) {
+                showFieldError('firstName', 'กรุณากรอกชื่อ');
+                isValid = false;
+            }
+
+            if (!data.last_name) {
+                showFieldError('lastName', 'กรุณากรอกนามสกุล');
+                isValid = false;
+            }
+
+            if (!validatePassword(data.password)) {
+                showFieldError('password', 'รหัสผ่านต้องมีมากกว่า 6 ตัวอักษร');
+                isValid = false;
+            }
+
+            if (!validatePassword(data.email)) {
+                showFieldError('email', 'รูปแบบอิเมลไม่ถูกต้อง');
+                isValid = false;
+            }
+
+            if (!validatePassword(data.phone)) {
+                showFieldError('phone', 'กรุณากรอกรหัสผ่าน');
+                isValid = false;
+            }
+
+            if (!data.position || data.position === "") {
+                showFieldError('position', 'กรุณาเลือกตำแหน่ง');
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            clearValidation('createForm');
+
+            const formData = new FormData(form);
+
+            if (validateForm()) {
+                modalConfirm('ยืนยันการสร้างบัญชีผู้ใช้งานครูใหม่ใช่หรือไม่?').
+                then((result) => {
+                        if (result.isConfirmed) {
+                            fetch('add.php', {
+                                    method: 'POST',
+                                    body: formData
+                                })
+                                .then(response => response.json())
+                                .then(response => {
+                                    if (response.result === true) {
+                                        modalAlert('สร้างบัญชีใหม่สำเร็จ', 'สร้างบัญชีครู/อาจารย์ใหม่สำเร็จ', 'success')
+                                            .then(() => window.location.href = 'index.php');
+                                    } else {
+                                        modalAlert('สร้างบัญชีไม่สำเร็จ', response.message, 'error');
+                                    }
+                                })
+                                .catch(error => {
+                                    modalAlert('การเชื่อมต่อล้มเหลว', 'ไม่สามารถติดต่อกับเซิร์ฟเวอร์ได้', 'error');
+                                    console.error('Fetch error:', error);
+                                });
+                        }
+                    }
+
+                )
+            }
+        })
     </script>
 </body>
 

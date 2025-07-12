@@ -160,8 +160,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($start_d
                         <tr>
                             <th>ลำดับที่</th>
                             <th>โปรไฟล์</th>
-                            <th>ชื่อ-นามสกุล</th>
                             <th>ชื่อผู้ใช้งาน</th>
+                            <th>ชื่อ-นามสกุล</th>
                             <th>อิเมลล์</th>
                             <th>เบอร์โทรศัพท์</th>
                             <th>ตำแหน่ง</th>
@@ -178,36 +178,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($start_d
                                 $username = $item['username'];
                                 $first_name = $item['first_name'];
                                 $last_name = $item['last_name'];
-                                $full_name = $item['first_name'] . ' ' . $item['last_name'];
+                                $full_name = $first_name . ' ' . $last_name;
                                 $email = $item['email'];
                                 $phone = $item['phone'];
-                                $education_level = $item['position'];
+                                $position = $item['position'];
                                 $image = !empty($item['image']) ? $item['image'] : "";
                                 $created_at = date('d/m/Y H:i', strtotime($item['created_at']));
 
-                                $isset_image = $image != '' ? '../../../assets/images/user/student/' . $image : '../../../assets/images/user/no-image-profile.jpg';
+                                $isset_image = $image != '' ? '../../../assets/images/user/teacher/' . $image : '../../../assets/images/user/no-image-profile.jpg';
                         ?>
                                 <tr>
                                     <td><?= $i++; ?></td>
                                     <td><img class="img-thumbnail w-50 h-auto" src="<?php echo $isset_image ?>"></td>
-                                    <td class="text-center"><?php echo htmlspecialchars($student_code); ?></td>
+                                    <td class="text-center"><?php echo htmlspecialchars($username); ?></td>
                                     <td><?php echo htmlspecialchars($full_name); ?></td>
                                     <td><?php echo htmlspecialchars($email); ?></td>
                                     <td><?php echo htmlspecialchars($phone); ?></td>
-                                    <td><?php echo htmlspecialchars($education_level); ?></td>
-                                    <td><?php echo htmlspecialchars($status_register); ?></td>
+                                    <td><?php echo htmlspecialchars($position); ?></td>
                                     <td><?php echo htmlspecialchars($created_at); ?></td>
                                     <td class="text-center">
                                         <button class="action-btn btn-outline-primary"
                                             onclick="modalEdit(
                                                 <?php echo $id; ?>, 
-                                                '<?php echo htmlspecialchars($student_code, ENT_QUOTES); ?>', 
+                                                '<?php echo htmlspecialchars($username, ENT_QUOTES); ?>', 
                                                 '<?php echo htmlspecialchars($first_name, ENT_QUOTES); ?>', 
                                                 '<?php echo htmlspecialchars($last_name, ENT_QUOTES); ?>', 
                                                 '<?php echo htmlspecialchars($email, ENT_QUOTES); ?>', 
                                                 '<?php echo htmlspecialchars($phone, ENT_QUOTES); ?>', 
-                                                '<?php echo htmlspecialchars($education_level, ENT_QUOTES); ?>', 
-                                                <?php echo $item['status_register']; ?>,
+                                                '<?php echo htmlspecialchars($position, ENT_QUOTES); ?>', 
                                                 '<?php echo $image ?>', 
                                                 '<?php echo htmlspecialchars($created_at, ENT_QUOTES); ?>',
                                                 '<?php echo $isset_image ?>'
@@ -253,7 +251,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($start_d
             <div class="modal-content">
                 <!-- ส่วนหัว -->
                 <div class="modal-header">
-                    <h5 class="modal-title text-warning" id="modalTitle">แก้ไขข้อมูลนักเรียน นักศึกษา</h5>
+                    <h5 class="modal-title text-warning" id="modalTitle">แก้ไขข้อมูล ครู/อาจารย์</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
@@ -283,7 +281,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($start_d
                                         <input type="text" class="form-control" id="editId" name="id" readonly required>
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label">รหัสนักศึกษา</label>
+                                        <label class="form-label">ชื่อผู้ใช้งาน</label>
                                         <input type="text" class="form-control" id="editUsername" name="username" required>
                                     </div>
 
@@ -311,29 +309,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($start_d
                                         <input type="tel" class="form-control" id="editPhone" name="phone" required>
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label">ระดับชั้นที่ศึกษาปัจจุบัน</label>
-                                        <select class="form-select" name="education_level" id="editEducationLevel" required>
-                                            <option value="">เลือกระดับชั้น</option>
-                                            <option value="ปวช.1">ปวช.1</option>
-                                            <option value="ปวช.2">ปวช.2</option>
-                                            <option value="ปวช.3">ปวช.3</option>
-                                            <option value="ปวส.1">ปวส.1</option>
-                                            <option value="ปวส.2">ปวส.2</option>
+                                        <label class="form-label">ตำแหน่ง</label>
+                                        <select class="form-select" name="position" id="editPosition" required>
+                                            <option value="">เลือก</option>
+                                            <option value="หัวหน้าแผนกวิชา">หัวหน้าแผนกวิชา</option>
+                                            <option value="ครูผู้ช่วย">ครูผู้ช่วย</option>
+                                            <option value="ครูอัตราจ้าง">ครูอัตราจ้าง</option>
                                         </select>
                                     </div>
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label">สถานะ</label>
-                                    <select class="form-select" id="editStatus" name="status_register" required>
-                                        <option value="1">Approved</option>
-                                        <option value="2">Waiting for Approved</option>
-                                        <option value="0">Reject</option>
-                                    </select>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label">วันที่เริ่มเป็นสมาขิก</label>
+                                    <label class="form-label">วันที่สร้างบัญชี</label>
                                     <input type="text" class="form-control" id="editDateRegister" disabled name="date_register" required>
                                 </div>
                             </div>
@@ -369,7 +356,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($start_d
             document.getElementById('editLastName').value = last_name;
             document.getElementById('editEmail').value = email;
             document.getElementById('editPhone').value = phone;
-            document.getElementById('editStatus').value = status_register;
+            document.getElementById('editPosition').value = position;
             document.getElementById('editDateRegister').value = created_at;
 
             document.getElementById('imagePreview').src = issetImage;

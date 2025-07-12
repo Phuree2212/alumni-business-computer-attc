@@ -1,4 +1,6 @@
 <?php
+require 'pagination_helper.php';
+
 class Admin
 {
     protected $conn;
@@ -15,7 +17,7 @@ class Admin
     public function checkDuplicateCreate($username = '', $email = '', $phone = '')
     {
         if (!empty($username)) {
-            $stmt = $this->conn->prepare("SELECT COUNT(user_id) FROM {$this->table} WHERE username = :username ");
+            $stmt = $this->conn->prepare("SELECT COUNT(admin_id) FROM {$this->table} WHERE username = :username ");
             $stmt->bindParam(':username', $username);
 
             $stmt->execute();
@@ -25,7 +27,7 @@ class Admin
         }
 
         if (!empty($email)) {
-            $stmt = $this->conn->prepare("SELECT COUNT(user_id) FROM {$this->table} WHERE email = :email");
+            $stmt = $this->conn->prepare("SELECT COUNT(admin_id) FROM {$this->table} WHERE email = :email");
             $stmt->bindParam(':email', $email);
 
             $stmt->execute();
@@ -35,7 +37,7 @@ class Admin
         }
 
         if (!empty($phone)) {
-            $stmt = $this->conn->prepare("SELECT COUNT(user_id) FROM {$this->table} WHERE phone = :phone");
+            $stmt = $this->conn->prepare("SELECT COUNT(admin_id) FROM {$this->table} WHERE phone = :phone");
             $stmt->bindParam(':phone', $phone);
 
             $stmt->execute();
@@ -47,7 +49,7 @@ class Admin
         return ['result' => true, 'message' => 'ไม่พบข้อมูลซ้ำในระบบ'];; // ไม่มีข้อมูลซ้ำ
     }
 
-    public function create($username, $password, $email, $first_name, $last_name, $phone, $position, $role, $image = '')
+    public function create($username, $password, $email, $first_name, $last_name, $phone, $position, $image = '')
     {
         try {
             $result_check_duplicate = $this->checkDuplicateCreate($username, $email, $phone);
@@ -55,7 +57,20 @@ class Admin
                 return $result_check_duplicate;
             }
 
+            //เข้ารหัสรหัสผ่าน
             $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+
+            //ตรวจสอบว่ามีการอัพโหลดรูปภาพมาไหม ถ้ามีให้ทำการบันทึกรูปภาพ
+            $new_image_files = '';
+            if (!empty($image['name'])) {
+                $uploader = new ImageUploader('../../../assets/images/user/teacher');
+                $uploader->setMaxFileSize(5 * 1024 * 1024) // MAX SIZE 5MB
+                    ->setMaxFiles(1); // Limit based on existing images
+
+                $new_image_files .= $first_name . '_' . $last_name;
+                $result = $uploader->uploadSingle($_FILES['image'], $new_image_files);
+                $new_image_files = $result['fileName'];
+            }
 
             $stmt = $this->conn->prepare("INSERT INTO {$this->table} (username, password, email, first_name, last_name, phone, position, role, image)
                     VALUES (:username, :password, :email, :first_name, :last_name, :phone, :position, :role, :image)");
@@ -66,8 +81,8 @@ class Admin
             $stmt->bindParam(':last_name', $last_name);
             $stmt->bindParam(':phone', $phone);
             $stmt->bindParam(':position', $position);
-            $stmt->bindParam(':role', $role);
-            $stmt->bindParam(':image', $image);
+            $stmt->bindParam(':role', $this->role);
+            $stmt->bindParam(':image', $new_image_files);
 
             if ($stmt->execute()) {
                 return ['result' => true, 'message' => 'สร้างบัญชีผู้ดูแลระบบใหม่สำเร็จ'];
@@ -120,9 +135,9 @@ class Admin
     public function checkDuplicate($id, $username = '', $email = '', $phone = '')
     {
         if (!empty($username)) {
-            $stmt = $this->conn->prepare("SELECT COUNT(user_id) FROM {$this->table} WHERE username = :username AND user_id != :user_id");
+            $stmt = $this->conn->prepare("SELECT COUNT(admin_id) FROM {$this->table} WHERE username = :username AND admin_id != :admin_id");
             $stmt->bindParam(':username', $username);
-            $stmt->bindParam(':user_id', $id, PDO::PARAM_INT);
+            $stmt->bindParam(':admin_id', $id, PDO::PARAM_INT);
 
             $stmt->execute();
             if ($stmt->fetchColumn() > 0) {
@@ -131,9 +146,9 @@ class Admin
         }
 
         if (!empty($email)) {
-            $stmt = $this->conn->prepare("SELECT COUNT(user_id) FROM {$this->table} WHERE email = :email AND user_id != :user_id");
+            $stmt = $this->conn->prepare("SELECT COUNT(admin_id) FROM {$this->table} WHERE email = :email AND admin_id != :admin_id");
             $stmt->bindParam(':email', $email);
-            $stmt->bindParam(':user_id', $id, PDO::PARAM_INT);
+            $stmt->bindParam(':admin_id', $id, PDO::PARAM_INT);
 
             $stmt->execute();
             if ($stmt->fetchColumn() > 0) {
@@ -142,9 +157,9 @@ class Admin
         }
 
         if (!empty($phone)) {
-            $stmt = $this->conn->prepare("SELECT COUNT(user_id) FROM {$this->table} WHERE phone = :phone AND user_id != :user_id");
+            $stmt = $this->conn->prepare("SELECT COUNT(admin_id) FROM {$this->table} WHERE phone = :phone AND admin_id != :admin_id");
             $stmt->bindParam(':phone', $phone);
-            $stmt->bindParam(':user_id', $id, PDO::PARAM_INT);
+            $stmt->bindParam(':admin_id', $id, PDO::PARAM_INT);
 
             $stmt->execute();
             if ($stmt->fetchColumn() > 0) {
@@ -157,7 +172,7 @@ class Admin
 
     public function delete($id)
     {
-        $stmt = $this->conn->prepare("DELETE FROM {$this->table} WHERE user_id = :id");
+        $stmt = $this->conn->prepare("DELETE FROM {$this->table} WHERE admin_id = :id");
         $stmt->bindParam(':id', $id);
 
         $result = $stmt->execute();
@@ -184,19 +199,18 @@ class Admin
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function edit($id, $username, $password, $email, $first_name, $last_name, $phone, $position, $image = '')
+    public function edit($id, $username, $email, $first_name, $last_name, $phone, $position, $image = '')
     {
-        $result_check_duplicate = $this->checkDuplicate($id,$username, $email, $phone);
-        if(!$result_check_duplicate['result']){
+        $result_check_duplicate = $this->checkDuplicate($id, $username, $email, $phone);
+        if (!$result_check_duplicate['result']) {
             return $result_check_duplicate;
         }
 
-        $stmt = $this->conn->prepare("UPDATE {$this->table} SET username = :username, password = :password, email = :email, first_name = :first_name, last_name = :last_name, phone = :phone,
-                                     postition = :position, image = :image 
+        $stmt = $this->conn->prepare("UPDATE {$this->table} SET username = :username, email = :email, first_name = :first_name, last_name = :last_name, phone = :phone,
+                                     position = :position, image = :image 
                                      WHERE admin_id = :id");
 
         $stmt->bindParam(':username', $username);
-        $stmt->bindParam(':password', $password);
         $stmt->bindParam(':email', $email);
         $stmt->bindParam(':first_name', $first_name);
         $stmt->bindParam(':last_name', $last_name);
@@ -214,7 +228,7 @@ class Admin
     //กรองข้อมูล
     public function searchAndFilter($keyword = '', $start_date = '', $end_date = '', $limit = null, $offset = null)
     {
-        $sql = "SELECT * FROM {$this->table} WHERE role = :role AND status_register = 1";
+        $sql = "SELECT * FROM {$this->table} WHERE role = :role";
         $params = [];
 
         if (!empty($keyword)) {
