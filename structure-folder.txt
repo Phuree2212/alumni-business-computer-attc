@@ -1,0 +1,202 @@
+alumni-website/
+│
+├── 📁 assets/                          # ไฟล์ static ทั้งหมด
+│   ├── 📁 css/                        # ไฟล์ CSS
+│   │   ├── bootstrap.min.css
+│   │   ├── style.css                  # CSS หลักของเว็บไซต์
+│   │   ├── admin.css                  # CSS สำหรับหน้า admin
+│   │   ├── login.css                  # CSS สำหรับหน้า login
+│   │   └── responsive.css             # CSS สำหรับ responsive
+│   │
+│   ├── 📁 js/                         # ไฟล์ JavaScript
+│   │   ├── bootstrap.bundle.min.js
+│   │   ├── jquery.min.js
+│   │   ├── main.js                    # JS หลักของเว็บไซต์
+│   │   ├── admin.js                   # JS สำหรับหน้า admin
+│   │   ├── form-validation.js         # JS สำหรับ validation
+│   │   └── chart.js                   # JS สำหรับ charts
+│   │
+│   ├── 📁 images/                     # รูปภาพทั้งหมด
+│   │   ├── 📁 logo/                   # โลโก้ต่างๆ
+│   │   ├── 📁 banners/                # รูป banner
+│   │   ├── 📁 profiles/               # รูปโปรไฟล์ผู้ใช้
+│   │   ├── 📁 events/                 # รูปกิจกรรม
+│   │   ├── 📁 news/                   # รูปข่าวสาร
+│   │   └── 📁 gallery/                # รูปแกลเลอรี่
+│   │
+│   ├── 📁 fonts/                      # ฟอนต์ที่ใช้
+│   │   ├── Sarabun/
+│   │   └── Kanit/
+│   │
+│   └── 📁 documents/                  # เอกสารต่างๆ
+│       ├── 📁 pdf/
+│       ├── 📁 resumes/                # เรซูเม่
+│       └── 📁 certificates/           # ใบประกาศนียบัตร
+│
+├── 📁 config/                         # ไฟล์ config
+│   ├── database.php                   # การเชื่อมต่อฐานข้อมูล
+│   ├── config.php                     # การตั้งค่าทั่วไป
+│   ├── constants.php                  # ค่าคงที่
+│   └── session.php                    # การจัดการ session
+│
+├── 📁 includes/                       # ไฟล์ที่ include ร่วมกัน
+│   ├── header.php                     # Header ของเว็บไซต์
+│   ├── footer.php                     # Footer ของเว็บไซต์
+│   ├── navbar.php                     # Navigation bar
+│   ├── sidebar.php                    # Sidebar (สำหรับ admin)
+│   ├── functions.php                  # ฟังก์ชันทั่วไป
+│   └── auth.php                       # การตรวจสอบ authentication
+│
+├── 📁 classes/                        # PHP Classes (OOP)
+│   ├── Database.php                   # Class สำหรับจัดการฐานข้อมูล  
+│   ├── User.php                       # Class สำหรับจัดการผู้ใช้
+│   ├── Alumni.php                     # Class สำหรับจัดการศิษย์เก่า
+│   ├── Student.php                    # Class สำหรับจัดการศิษย์ปัจจุบัน
+│   ├── News.php                       # Class สำหรับจัดการข่าวสาร
+│   ├── Event.php                      # Class สำหรับจัดการกิจกรรม
+│   ├── Job.php                        # Class สำหรับจัดการงาน
+│   ├── Forum.php                      # Class สำหรับจัดการฟอรั่ม
+│   └── Survey.php                     # Class สำหรับจัดการแบบสำรวจ
+│
+├── 📁 api/                           # API endpoints (สำหรับ AJAX calls)
+│   ├── auth/
+│   │   ├── login.php
+│   │   ├── register.php
+│   │   └── logout.php
+│   ├── users/
+│   │   ├── profile.php
+│   │   ├── update.php
+│   │   └── delete.php
+│   ├── news/
+│   │   ├── get.php
+│   │   ├── create.php
+│   │   └── update.php
+│   ├── events/
+│   │   ├── get.php
+│   │   ├── join.php
+│   │   └── leave.php
+│   └── jobs/
+│       ├── get.php
+│       ├── apply.php
+│       └── post.php
+│
+├── 📁 public/                        # หน้าเว็บที่ผู้ใช้ทั่วไปเข้าถึงได้
+│   ├── index.php                      # หน้าแรก
+│   ├── about.php                      # เกี่ยวกับเรา
+│   ├── contact.php                    # ติดต่อเรา
+│   ├── login.php                      # หน้า login
+│   ├── register.php                   # หน้าลงทะเบียน
+│   ├── profile.php                    # หน้าโปรไฟล์
+│   ├── 📁 news/                       # ข่าวสาร
+│   │   ├── index.php                  # รายการข่าว
+│   │   └── detail.php                 # รายละเอียดข่าว
+│   ├── 📁 events/                     # กิจกรรม
+│   │   ├── index.php                  # รายการกิจกรรม
+│   │   └── detail.php                 # รายละเอียดกิจกรรม
+│   ├── 📁 jobs/                       # งาน
+│   │   ├── index.php                  # รายการงาน
+│   │   ├── detail.php                 # รายละเอียดงาน
+│   │   └── post.php                   # โพสต์งาน
+│   ├── 📁 forum/                      # ฟอรั่ม
+│   │   ├── index.php                  # หน้าหลักฟอรั่ม
+│   │   ├── topic.php                  # หัวข้อใน forum
+│   │   └── post.php                   # โพสต์ใหม่
+│   ├── 📁 alumni/                     # ข้อมูลศิษย์เก่า
+│   │   ├── directory.php              # ไดเรกทอรี่ศิษย์เก่า
+│   │   └── achievements.php           # ผลงานศิษย์เก่า
+│   └── 📁 surveys/                    # แบบสำรวจ
+│       ├── index.php                  # รายการแบบสำรวจ
+│       └── take.php                   # ทำแบบสำรวจ
+│
+├── 📁 dashboard/                      # Dashboard สำหรับผู้ใช้ที่ login แล้ว
+│   ├── index.php                      # หน้าแรก dashboard
+│   ├── profile.php                    # จัดการโปรไฟล์
+│   ├── settings.php                   # การตั้งค่า
+│   ├── notifications.php              # การแจ้งเตือน
+│   ├── 📁 alumni/                     # Dashboard ศิษย์เก่า
+│   │   ├── dashboard.php
+│   │   ├── job-history.php
+│   │   └── achievements.php
+│   └── 📁 student/                    # Dashboard ศิษย์ปัจจุบัน
+│       ├── dashboard.php
+│       ├── grades.php
+│       └── courses.php
+│
+├── 📁 admin/                         # หน้า admin
+│   ├── index.php                      # หน้าแรก admin
+│   ├── login.php                      # หน้า login admin
+│   ├── 📁 users/                      # จัดการผู้ใช้
+│   │   ├── index.php                  # รายการผู้ใช้
+│   │   ├── add.php                    # เพิ่มผู้ใช้
+│   │   ├── edit.php                   # แก้ไขผู้ใช้
+│   │   ├── delete.php                 # ลบผู้ใช้
+│   │   └── approve.php                # อนุมัติผู้ใช้
+│   ├── 📁 news/                      # จัดการข่าวสาร
+│   │   ├── index.php
+│   │   ├── add.php
+│   │   ├── edit.php
+│   │   └── delete.php
+│   ├── 📁 events/                    # จัดการกิจกรรม
+│   │   ├── index.php
+│   │   ├── add.php
+│   │   ├── edit.php
+│   │   ├── delete.php
+│   │   └── participants.php          # ผู้เข้าร่วม
+│   ├── 📁 jobs/                      # จัดการงาน
+│   │   ├── index.php
+│   │   ├── approve.php
+│   │   └── applications.php          # ใบสมัคร
+│   ├── 📁 forum/                     # จัดการฟอรั่ม
+│   │   ├── index.php
+│   │   ├── moderate.php
+│   │   └── categories.php
+│   ├── 📁 surveys/                   # จัดการแบบสำรวจ
+│   │   ├── index.php
+│   │   ├── create.php
+│   │   ├── results.php
+│   │   └── analytics.php
+│   ├── 📁 reports/                   # รายงาน
+│   │   ├── users.php
+│   │   ├── activities.php
+│   │   └── statistics.php
+│   └── 📁 settings/                  # การตั้งค่าระบบ
+│       ├── general.php
+│       ├── email.php
+│       └── backup.php
+│
+├── 📁 uploads/                       # ไฟล์ที่อัปโหลด
+│   ├── 📁 profiles/                  # รูปโปรไฟล์
+│   ├── 📁 documents/                 # เอกสาร
+│   ├── 📁 news-images/               # รูปข่าว
+│   ├── 📁 event-images/              # รูปกิจกรรม
+│   └── 📁 resumes/                   # ไฟล์เรซูเม่
+│
+├── 📁 backup/                        # ไฟล์สำรอง
+│   ├── 📁 database/                  # backup ฐานข้อมูล
+│   └── 📁 files/                     # backup ไฟล์
+│
+├── 📁 logs/                          # Log files
+│   ├── error.log                     # Log ข้อผิดพลาด
+│   ├── access.log                    # Log การเข้าถึง
+│   └── activity.log                  # Log กิจกรรม
+│
+├── 📁 vendor/                        # Dependencies (ถ้าใช้ Composer)
+│   └── autoload.php
+│
+├── 📁 database/                      # ไฟล์ฐานข้อมูล
+│   ├── alumni_system.sql             # Structure และ data
+│   ├── migrations/                   # การปรับปรุงฐานข้อมูล
+│   └── seeds/                        # ข้อมูลตัวอย่าง
+│
+├── 📁 documentation/                 # เอกสารโปรเจค
+│   ├── README.md                     # คู่มือการใช้งาน
+│   ├── INSTALLATION.md               # คู่มือการติดตั้ง
+│   ├── API.md                        # เอกสาร API
+│   └── DATABASE.md                   # เอกสารฐานข้อมูล
+│
+├── .htaccess                         # การตั้งค่า Apache
+├── .gitignore                        # ไฟล์ที่ไม่ต้อง commit
+├── composer.json                     # Composer dependencies
+├── package.json                      # NPM dependencies (ถ้าใช้)
+├── README.md                         # ข้อมูลโปรเจค
+└── index.php                         # หน้าแรกหลัก (redirect ไป public/)
