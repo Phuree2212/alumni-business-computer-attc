@@ -1,12 +1,10 @@
 <?php 
-include '../config/config.php';
+require_once '../auth/auth_admin.php';
+require_once '../classes/admin.php';
 
-/*require_once '../classes/admin.php';
 $db = new Database();
 $conn = $db->connect();
-$admin = new Admin($conn, 'admin');*/
-
-require_once '../auth/auth_admin.php';
+$admin = new Admin($conn, 'admin');
 
 ?>
 <!DOCTYPE html>

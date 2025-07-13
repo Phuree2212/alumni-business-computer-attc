@@ -1,13 +1,15 @@
 <?php
 include '../config/config.php';
+require_once '../classes/auth.php';
 require_once '../classes/admin.php';
 
 $db = new Database();
 $conn = $db->connect();
 $admin = new Admin($conn, 'admin');
+$auth = new Auth();
 
 //ตรวจสมอบการเข้าสู่ระบบ
-if ($admin->isLoggedIn()) {
+if ($auth->isLoggedInAdmin()) {
     header('Location: index.php');
     exit;
 }

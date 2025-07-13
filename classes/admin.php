@@ -101,9 +101,6 @@ class Admin
         }
     }
 
-    public function isLoggedIn(){
-        return isset($_SESSION['user']) && ($_SESSION['user']['role'] === USER_TYPE_ADMIN || $_SESSION['user']['role'] === USER_TYPE_TEACHER);
-    }
     //เข้าสู่ระบบ
     public function login($username, $password)
     {

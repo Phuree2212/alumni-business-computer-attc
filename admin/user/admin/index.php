@@ -1,5 +1,5 @@
 <?php
-include '../../../config/config.php';
+require_once '../../../auth/auth_admin.php';
 require_once '../../../classes/admin.php';
 require_once '../../../classes/pagination_helper.php';
 

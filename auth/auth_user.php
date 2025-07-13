@@ -1,14 +1,11 @@
 <?php
-require_once '../config/config.php';
-require_once '../classes/user.php';
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../classes/auth.php';
 
-$db = new Database();
-$conn = $db->connect();
-
-$user = new User($conn);
+$auth = new Auth();
 
 // ตรวจสอบการเข้าสู่ระบบ
-if (!$admin->isLoggedIn()) {
-    header('Location: login.php');
+if (!$auth->isLoggedInUser()) {
+    header('Location:' . $base_url . '/public/login.php');
     exit;
 }

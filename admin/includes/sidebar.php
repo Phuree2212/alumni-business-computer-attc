@@ -111,7 +111,7 @@
             </div>
 
             <div class="menu-item">
-                <a href="#" class="menu-link">
+                <a href="<?php echo $base_url ?>/auth/logout.php" class="menu-link">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>ออกจากระบบ</span>
                 </a>
