@@ -1,5 +1,29 @@
 <?php
 include '../config/config.php';
+require_once '../classes/admin.php';
+
+$db = new Database();
+$conn = $db->connect();
+$admin = new Admin($conn, 'admin');
+
+//ตรวจสมอบการเข้าสู่ระบบ
+if ($admin->isLoggedIn()) {
+    header('Location: index.php');
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['username']) && isset($_POST['password'])) {
+
+    $username = htmlspecialchars($_POST['username']);
+    $password = htmlspecialchars($_POST['password']);
+
+    $result = $admin->login($username, $password);
+
+    echo json_encode($result);
+
+    exit;
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -7,16 +31,17 @@ include '../config/config.php';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>Login - Admin</title>
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="../assets/css/bootstrap-icons.min.css" rel="stylesheet">
     <link href="../assets/css/style.css" rel="stylesheet">
+    <link href="../assets/css/sweetalert2.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
 </head>
 <style>
     .card-container.card {
-        max-width: 350px;
+        max-width: 500px;
         padding: 40px 40px;
     }
 
@@ -152,17 +177,12 @@ include '../config/config.php';
 
     <div class="container d-flex align-items-center" style="height: 70vh;">
         <div class="card card-container">
-             <h2 class="text-center mb-2">เข้าสู่ระบบสำหรับผู้ดูแลระบบ</h2>
-            <form class="form-signin">
+            <h3 class="text-center mb-3">เข้าสู่ระบบสำหรับผู้ดูแลระบบ</h3>
+            <form id="formLogin" method="post" class="form-signin">
                 <span id="reauth-email" class="reauth-email"></span>
-                <input type="text" id="inputEmail" class="form-control" placeholder="ชื่อผู้ใช้" required autofocus>
-                <input type="password" id="inputPassword" class="form-control" placeholder="รหัสผ่าน" required>
-                <div id="remember" class="checkbox mb-2">
-                    <label>
-                        <input type="checkbox" value="remember-me"> จดจำการเข้าสู่ระบบ
-                    </label>
-                </div>
-                <button class="btn btn-lg btn-primary btn-block btn-signin" type="submit">เข้าสู่ระบบ</button>
+                <input type="text" name="username" id="inputEmail" class="form-control" placeholder="ชื่อผู้ใช้" required autofocus>
+                <input type="password" name="password" id="inputPassword" class="form-control" placeholder="รหัสผ่าน" required>
+                <button class="btn btn-lg btn-primary btn-block btn-signin" type="button" onclick="login()" >เข้าสู่ระบบ</button>
             </form><!-- /form -->
             <a href="#" class="forgot-password">
                 ลืมรหัสผ่าน
@@ -175,6 +195,35 @@ include '../config/config.php';
     <?php include '../includes/footer.php' ?>
 
     <script src="../assets/js/bootstrap.bundle.js"></script>
+    <script src="../assets/js/sweetalert2.all.min.js"></script>
+    <script src="../assets/alerts/modal.js"></script>
+    <script>
+        function login() {
+            const form = document.getElementById('formLogin');
+            const formData = new FormData(form);
+            const formParams = new URLSearchParams(formData);
+
+            fetch('login.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: formParams
+                })
+                .then(response => response.json())
+                .then(response =>{
+                    if(response.result){
+                        window.location.href = 'index.php';
+                    }else{
+                        modalAlert('เข้าสู่ระบบไม่สำเร็จ', response.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    modalAlert(`การเชื่อมต่อล้มเหลว`, "ไม่สามารถติดต่อกับเซิร์ฟเวอร์ได้", "error")
+                    console.error('Fetch error:', error);
+                });
+        }
+    </script>
 
 </body>
 

@@ -10,7 +10,8 @@ define('SITE_NAME', 'เว็บไซต์ศิษย์เก่า คอ�
 // User Type
 define('USER_TYPE_STUDENT', 1);
 define('USER_TYPE_ALUMNI', 2);
-define('USER_TYPE_ADMIN', 9);
+define('USER_TYPE_ADMIN', 3);
+define('USER_TYPE_TEACHER', 4);
 
 // Group Type
 define('GROUP_PUBLIC', 1);

@@ -41,6 +41,10 @@
                         <i class="fas fa-chalkboard-teacher"></i>
                         <span>จัดการข้อมูลครู/อาจารย์</span>
                     </a>
+                    <a href="<?php echo $base_url ?>/admin/user/admin/" class="menu-link">
+                        <i class="fas fa-user"></i>
+                        <span>จัดการข้อมูลผู้ดูแลระบบ</span>
+                    </a>
                     <a href="<?php echo $base_url ?>/admin/user/user_approval/" class="menu-link">
                         <i class="fas fa-user-plus"></i>
                         <span>คำขอลงทะเบียนใหม่</span>

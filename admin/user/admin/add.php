@@ -6,7 +6,7 @@ require_once '../../../classes/image_uploader.php';
 $db = new Database();
 $conn = $db->connect();
 
-$teacher = new Admin($conn, 'teacher');
+$teacher = new Admin($conn, 'admin');
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username = $_POST['username'];
@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <div class="main-content">
         <form id="createForm" enctype="multipart/form-data">
             <div class="card-body">
-                <h3 class="h3 mb-4 text-success">สร้างข้อมูล ครู/อาจารย์ ใหม่</h3>
+                <h3 class="h3 mb-4 text-success">สร้างข้อมูล ผู้ดูแลระบบ ใหม่</h3>
                 <div class="row">
                     <div class="col-md-2">
                         <img id="imagePreview" src="../../../assets/images/user/no-image-profile.jpg" class="img-thumbnail mb-2" style="width: 200px; object-fit: cover;">
@@ -112,11 +112,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                             <div class="col-md-6 mb-5">
                                 <label class="form-label">ตำแหน่ง</label>
-                                <select class="form-select" name="position" id="position">
-                                    <option value="">เลือก</option>
-                                    <option value="หัวหน้าแผนกวิชา">หัวหน้าแผนกวิชา</option>
-                                    <option value="ครูผู้ช่วย">ครูผู้ช่วย</option>
-                                    <option value="ครูอัตราจ้าง">ครูอัตราจ้าง</option>
+                                <select class="form-select" name="position" id="position" readonly>
+                                    <option value="ผู้ดูแลระบบ">ผู้ดูแลระบบ</option>
                                 </select>
                                 <div class="invalid-feedback"></div>
                             </div>
