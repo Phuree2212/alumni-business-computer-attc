@@ -1,5 +1,46 @@
 <?php
 require_once '../../config/config.php';
+require_once '../../classes/news.php';
+require_once '../../classes/pagination_helper.php';
+
+$db = new Database();
+$conn = $db->connect();
+$news = new News($conn);
+
+// ตั้งค่าพื้นฐาน
+$currentPage   = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$itemsPerPage  = 10;
+
+// รับค่าการค้นหา
+$keyword    = trim($_GET['keyword'] ?? '');
+$start_date = $_GET['start_date'] ?? '';
+$end_date   = $_GET['end_date'] ?? '';
+
+// ถ้ามีการกรองข้อมูล
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($start_date) || !empty($end_date))) {
+
+    // นับจำนวนรายการที่ตรงกับเงื่อนไขการค้นหา
+    $totalItems = $news->getSearchAndFilterCount($keyword, $start_date, $end_date);
+
+    // สร้าง pagination
+    $pagination = new PaginationHelper($currentPage, $itemsPerPage, $totalItems);
+
+    // ดึงข่าวตามเงื่อนไข
+    $news_list = $news->searchAndFilterNews($keyword,$start_date,$end_date,$pagination->getLimit(),$pagination->getOffset()
+    );
+
+} else {
+    // นับจำนวนรายการทั้งหมด
+    $totalItems = $news->getTotalCount();
+
+    // สร้าง pagination
+    $pagination = new PaginationHelper($currentPage, $itemsPerPage, $totalItems);
+
+    // ดึงข่าวทั้งหมด
+    $news_list = $news->getAllNews($pagination->getLimit(),$pagination->getOffset()
+    );
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -37,81 +78,54 @@ require_once '../../config/config.php';
     <!-- Knowledge Articles -->
     <section class="py-5">
         <div class="container">
-            <h2 class="section-title text-center mb-5">กิจกรรม</h2>
+            <h2 class="section-title text-center mb-5">ข่าวสาร/ประชาสัมพันธ์</h2>
             <div class="row g-4">
+
+                <?php if (!empty($news_list)) {
+                            $i = 1;
+                            foreach ($news_list as $item) {
+                                $id = $item['news_id'];
+                                $title = $item['title'];
+                                $string_image = $item['image'];
+                                $first_image = explode(",", $item['image'])[0];
+                                $content = strip_tags(mb_substr($item['content'], 0, 200, 'UTF-8') . '...');
+                                $views_count = isset($item['views_count']) ? $item['views_count'] : 0;
+                                $created_by = $item['created_by'];
+                                $created_at = date('d-m-Y', strtotime($item['created_at']));
+                ?>
+
                 <div class="col-lg-4">
                     <div class="card h-100">
                         <div class="card-img-top" style="height: 250px;">
-                            <img src="https://scontent.fbkk26-1.fna.fbcdn.net/v/t39.30808-6/503309010_24131670466429904_6720287527956751855_n.jpg?stp=cp6_dst-jpg_p180x540_tt6&_nc_cat=104&ccb=1-7&_nc_sid=833d8c&_nc_ohc=MyTLp92cOqAQ7kNvwGBKxz3&_nc_oc=AdmUwUYs_FV4ZreFLADJFMzuig1psCPMrBoi2AsvNMqnlEB0hGKtDctDWt1CHd-L27U&_nc_zt=23&_nc_ht=scontent.fbkk26-1.fna&_nc_gid=IzC0qhhjFjxw-1H18w7aUg&oh=00_AfO2bjgsqb0YMmsMRCJCRO_KrUCNz5rX-hV0Kp-Zm-_ycg&oe=68537CB7" alt="การแข่งขันทักษะ Web Development" class="w-100 h-100" style="object-fit: cover;">
+                            <img src="../../assets/images/news/<?php echo $first_image ?>" alt="การแข่งขันทักษะ Web Development" class="w-100 h-100" style="object-fit: cover;">
                         </div>
                         <div class="card-body">
-                            <h5 class="card-title">88 ปีคืนสู่เหย้าชาวเทคนิคอ่างทอง</h5>
-                            <p class="card-text">💙 ๘๘ ปี คืนสู่เหย้า “ชาวเทคนิคอ่างทอง”
-                                👉 ปวส. คอมพิวเตอร์ธุรกิจ รุ่นที่ 1
-                                👉 ศิษย์เก่า วท.อ่างทอง รุ่นที่ 59 (2537)</p>
+                            <h5 class="card-title"><?php echo $title ?></h5>
+                            <p class="card-text"><?php echo $content ?></p>
                             <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted">เข้าชม 128 ครั้ง</small>
-                                <a href="#" class="btn btn-sm btn-outline-info">อ่านต่อ</a>
+                                <small class="text-muted">เข้าชม <?php echo $views_count ?> ครั้ง</small>
+                                <a href="detail.php?id=<?php echo $id ?>" class="btn btn-sm btn-primary">อ่านต่อ</a>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-lg-4">
-                    <div class="card h-100">
-                        <div class="card-img-top" style="height: 250px;">
-                            <img src="https://scontent.fbkk26-1.fna.fbcdn.net/v/t39.30808-6/503309010_24131670466429904_6720287527956751855_n.jpg?stp=cp6_dst-jpg_p180x540_tt6&_nc_cat=104&ccb=1-7&_nc_sid=833d8c&_nc_ohc=MyTLp92cOqAQ7kNvwGBKxz3&_nc_oc=AdmUwUYs_FV4ZreFLADJFMzuig1psCPMrBoi2AsvNMqnlEB0hGKtDctDWt1CHd-L27U&_nc_zt=23&_nc_ht=scontent.fbkk26-1.fna&_nc_gid=IzC0qhhjFjxw-1H18w7aUg&oh=00_AfO2bjgsqb0YMmsMRCJCRO_KrUCNz5rX-hV0Kp-Zm-_ycg&oe=68537CB7" alt="การแข่งขันทักษะ Web Development" class="w-100 h-100" style="object-fit: cover;">
-                        </div>
-                        <div class="card-body">
-                            <h5 class="card-title">88 ปีคืนสู่เหย้าชาวเทคนิคอ่างทอง</h5>
-                            <p class="card-text">💙 ๘๘ ปี คืนสู่เหย้า “ชาวเทคนิคอ่างทอง”
-                                👉 ปวส. คอมพิวเตอร์ธุรกิจ รุ่นที่ 1
-                                👉 ศิษย์เก่า วท.อ่างทอง รุ่นที่ 59 (2537)</p>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted">เข้าชม 128 ครั้ง</small>
-                                <a href="#" class="btn btn-sm btn-outline-info">อ่านต่อ</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <?php }} ?>
 
-                <div class="col-lg-4">
-                    <div class="card h-100">
-                        <div class="card-img-top" style="height: 250px;">
-                            <img src="https://scontent.fbkk26-1.fna.fbcdn.net/v/t39.30808-6/503309010_24131670466429904_6720287527956751855_n.jpg?stp=cp6_dst-jpg_p180x540_tt6&_nc_cat=104&ccb=1-7&_nc_sid=833d8c&_nc_ohc=MyTLp92cOqAQ7kNvwGBKxz3&_nc_oc=AdmUwUYs_FV4ZreFLADJFMzuig1psCPMrBoi2AsvNMqnlEB0hGKtDctDWt1CHd-L27U&_nc_zt=23&_nc_ht=scontent.fbkk26-1.fna&_nc_gid=IzC0qhhjFjxw-1H18w7aUg&oh=00_AfO2bjgsqb0YMmsMRCJCRO_KrUCNz5rX-hV0Kp-Zm-_ycg&oe=68537CB7" alt="การแข่งขันทักษะ Web Development" class="w-100 h-100" style="object-fit: cover;">
-                        </div>
-                        <div class="card-body">
-                            <h5 class="card-title">88 ปีคืนสู่เหย้าชาวเทคนิคอ่างทอง</h5>
-                            <p class="card-text">💙 ๘๘ ปี คืนสู่เหย้า “ชาวเทคนิคอ่างทอง”
-                                👉 ปวส. คอมพิวเตอร์ธุรกิจ รุ่นที่ 1
-                                👉 ศิษย์เก่า วท.อ่างทอง รุ่นที่ 59 (2537)</p>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted">เข้าชม 128 ครั้ง</small>
-                                <a href="#" class="btn btn-sm btn-outline-info">อ่านต่อ</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-lg-4">
-                    <div class="card h-100">
-                        <div class="card-img-top" style="height: 250px;">
-                            <img src="https://scontent.fbkk26-1.fna.fbcdn.net/v/t39.30808-6/503309010_24131670466429904_6720287527956751855_n.jpg?stp=cp6_dst-jpg_p180x540_tt6&_nc_cat=104&ccb=1-7&_nc_sid=833d8c&_nc_ohc=MyTLp92cOqAQ7kNvwGBKxz3&_nc_oc=AdmUwUYs_FV4ZreFLADJFMzuig1psCPMrBoi2AsvNMqnlEB0hGKtDctDWt1CHd-L27U&_nc_zt=23&_nc_ht=scontent.fbkk26-1.fna&_nc_gid=IzC0qhhjFjxw-1H18w7aUg&oh=00_AfO2bjgsqb0YMmsMRCJCRO_KrUCNz5rX-hV0Kp-Zm-_ycg&oe=68537CB7" alt="การแข่งขันทักษะ Web Development" class="w-100 h-100" style="object-fit: cover;">
-                        </div>
-                        <div class="card-body">
-                            <h5 class="card-title">88 ปีคืนสู่เหย้าชาวเทคนิคอ่างทอง</h5>
-                            <p class="card-text">💙 ๘๘ ปี คืนสู่เหย้า “ชาวเทคนิคอ่างทอง”
-                                👉 ปวส. คอมพิวเตอร์ธุรกิจ รุ่นที่ 1
-                                👉 ศิษย์เก่า วท.อ่างทอง รุ่นที่ 59 (2537)</p>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted">เข้าชม 128 ครั้ง</small>
-                                <a href="#" class="btn btn-sm btn-outline-info">อ่านต่อ</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                
                 
             </div>
+            <!-- Pagination -->
+        <div class="pagination-wrapper">
+            <div class="row align-items-center">
+                <?php
+
+                echo $pagination->renderBootstrap();
+
+                ?>
+            </div>
+        </div>
+
     </section>
 
     <?php include '../../includes/footer.php' ?>

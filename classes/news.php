@@ -55,7 +55,10 @@ class News
     //ดึงข้อมูลข่าวสารทั้งหมด
     public function getNews($news_id)
     {
-        $stmt = $this->conn->prepare("SELECT * FROM {$this->table} WHERE news_id = :id");
+        $stmt = $this->conn->prepare("SELECT n.*, a.first_name, a.last_name, a.image as image_profile, a.role FROM {$this->table} as n 
+                                      INNER JOIN admin as a
+                                      ON n.created_by = a.admin_id 
+                                      WHERE news_id = :id");
 
         $stmt->bindParam(':id', $news_id);
 

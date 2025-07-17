@@ -109,7 +109,7 @@ require_once '../config/config.php';
             <div class="main-content my-4">
                 <div class="row">
                     <div class="logo-department col-lg-4 text-center">
-                        <img src="assets/images/logo/logo_department.png" alt="โลโก้แผนกวิชาคอมพิวเตอร์ธุรกิจ วิทยาลัยเทคนิคอ่างทอง">
+                        <img src="../assets/images/logo/logo_department.png" alt="โลโก้แผนกวิชาคอมพิวเตอร์ธุรกิจ วิทยาลัยเทคนิคอ่างทอง">
                     </div>
                     <div class="col-lg-8 py-5">
                         <div class="d-flex mb-3 flex-column justify-content-center">

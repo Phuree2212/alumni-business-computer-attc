@@ -1,5 +1,50 @@
 <?php
 require_once '../../config/config.php';
+
+// ตัวอย่างข้อมูลศิษย์เก่า (จริงๆ ควรดึงจากฐานข้อมูล)
+$alumni_id = $_GET['id'] ?? 1;
+$alumni = [
+    'id' => 1,
+    'name' => 'นายอัครเดช สมบูรณ์',
+    'student_id' => '66120001',
+    'level' => 'ปวส.',
+    'year' => '2567',
+    'major' => 'คอมพิวเตอร์ธุรกิจ',
+    'status' => 'กำลังศึกษา',
+    'email' => 'akkaradet@email.com',
+    'phone' => '081-234-5678',
+    'facebook' => 'akkaradet.s',
+    'line' => 'akkaradet123',
+    'instagram' => 'akk_sb',
+    'linkedin' => 'akkaradet-somboon',
+    'github' => 'akkaradet-dev',
+    'address' => '123 หมู่ 5 ตำบลวิเศษไชยชาญ อำเภอวิเศษไชยชาญ จังหวัดอ่างทอง 14110',
+    'birth_date' => '15 มีนาคม 2548',
+    'age' => 20,
+    'avatar' => 'https://bootdey.com/img/Content/avatar/avatar1.png',
+    'graduation_date' => 'มีนาคม 2568 (คาดการณ์)',
+    'gpa' => '3.65',
+    'skills' => ['PHP', 'JavaScript', 'MySQL', 'HTML/CSS', 'Bootstrap', 'React'],
+    'projects' => [
+        [
+            'name' => 'ระบบจัดการร้านค้าออนไลน์',
+            'description' => 'พัฒนาระบบจัดการสินค้าและการขายออนไลน์ด้วย PHP และ MySQL',
+            'tech' => 'PHP, MySQL, Bootstrap'
+        ],
+        [
+            'name' => 'แอปพลิเคชันบันทึกค่าใช้จ่าย',
+            'description' => 'แอปพลิเคชันสำหรับบันทึกและติดตามค่าใช้จ่ายรายวัน',
+            'tech' => 'React Native, Firebase'
+        ]
+    ],
+    'certificates' => [
+        'การพัฒนาเว็บไซต์ด้วย PHP',
+        'Microsoft Office Specialist',
+        'Google Analytics Individual Qualification'
+    ],
+    'interests' => ['Web Development', 'Mobile App Development', 'UI/UX Design', 'Digital Marketing'],
+    'goals' => 'ต้องการเป็น Full Stack Developer และสร้างบริษัทเทคโนโลยีของตัวเอง'
+];
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -13,200 +58,225 @@ require_once '../../config/config.php';
 </head>
 
 <style>
-  .alumni-container {
+  .alumni-detail-container {
     min-height: calc(100vh - 3.5rem);
     background-color: #f8f9fa;
   }
 
-  .sidebar-nav {
-    background-color: #fff;
-    border-radius: 0.5rem;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, .1);
-    padding: 1.5rem;
-  }
-
-  .main-content {
-    background-color: #fff;
-    border-radius: 0.5rem;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, .1);
+  .profile-header {
+    background: linear-gradient(135deg, #467bcb 0%, #5a8dd8 100%);
+    border-radius: 1rem;
     padding: 2rem;
-    min-height: calc(100vh - 8rem);
+    color: white;
+    margin-bottom: 2rem;
   }
 
-  .alumni-card {
+  .profile-avatar {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border: 5px solid #fff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  }
+
+  .detail-card {
     background-color: #fff;
-    border: 1px solid #e9ecef;
     border-radius: 0.75rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+    margin-bottom: 1.5rem;
     overflow: hidden;
   }
 
-  .alumni-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-    border-color: #467bcb;
-  }
-
-  .alumni-avatar {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border: 3px solid #fff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-
-  .alumni-info h5 {
-    color: #1f2937;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-  }
-
-  .alumni-info .text-muted {
-    font-size: 0.875rem;
-  }
-
-  .alumni-badge {
-    background: linear-gradient(135deg, #467bcb 0%, #5a8dd8 100%);
-    color: white;
-    font-size: 0.75rem;
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
-    font-weight: 500;
-  }
-
-  .search-section {
-    background: linear-gradient(135deg, #467bcb 0%, #5a8dd8 100%);
-    border-radius: 1rem;
-    padding: 2rem;
-    margin-bottom: 2rem;
-    color: white;
-  }
-
-  .search-card {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    border: none;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  }
-
-  .nav-pills .nav-link {
-    color: #4a5568;
-    border-radius: 0.5rem;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
-  }
-
-  .nav-pills .nav-link:hover {
-    background-color: #e2e8f0;
-  }
-
-  .nav-pills .nav-link.active {
-    background: linear-gradient(135deg, #467bcb 0%, #5a8dd8 100%);
-    color: #fff;
-    box-shadow: 0 2px 8px rgba(70, 123, 203, 0.3);
-  }
-
-  .stats-card {
+  .detail-card-header {
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border: none;
-    border-radius: 1rem;
+    border-bottom: 1px solid #dee2e6;
+    padding: 1rem 1.5rem;
+    font-weight: 600;
+    color: #495057;
+  }
+
+  .detail-card-body {
     padding: 1.5rem;
-    text-align: center;
-    transition: transform 0.3s ease;
   }
 
-  .stats-card:hover {
-    transform: translateY(-2px);
+  .status-badge {
+    background: linear-gradient(135deg, #467bcb 0%, #5a8dd8 100%);
+    color: white;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    border-radius: 1.5rem;
+    font-weight: 500;
+    display: inline-block;
   }
 
-  .stats-number {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #467bcb;
-    margin-bottom: 0.5rem;
-  }
-
-  .alumni-contact {
+  .contact-links {
     display: flex;
-    gap: 0.5rem;
-    margin-top: 1rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
   }
 
-  .contact-btn {
-    padding: 0.375rem 0.5rem;
-    border-radius: 0.5rem;
+  .contact-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border-radius: 0.75rem;
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
     border: 1px solid #dee2e6;
     background: #fff;
-    color: #6c757d;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    font-size: 0.875rem;
+    color: #495057;
   }
 
-  .contact-btn:hover {
+  .contact-link:hover {
     background: #467bcb;
     color: white;
     border-color: #467bcb;
+    transform: translateY(-2px);
     text-decoration: none;
   }
 
-  .year-badge {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
+  .contact-link i {
+    margin-right: 0.5rem;
+    width: 16px;
+  }
+
+  .skill-badge {
     background: rgba(70, 123, 203, 0.1);
     color: #467bcb;
     font-size: 0.75rem;
     padding: 0.25rem 0.75rem;
     border-radius: 1rem;
-    font-weight: 600;
+    font-weight: 500;
+    margin: 0.25rem;
+    display: inline-block;
   }
 
-  .filter-section {
-    background: #fff;
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
+  .project-card {
+    background: #f8f9fa;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
     border: 1px solid #e9ecef;
   }
 
-  .accordion-button {
-    background-color: #f8f9fa;
-    border-color: #dee2e6;
-    color: #495057;
+  .project-title {
     font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
   }
 
-  .accordion-button:not(.collapsed) {
-    background-color: #467bcb;
+  .project-tech {
+    font-size: 0.75rem;
+    color: #6c757d;
+    background: rgba(108, 117, 125, 0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    display: inline-block;
+    margin-top: 0.5rem;
+  }
+
+  .certificate-item {
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+    border-left: 4px solid #467bcb;
+  }
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f1f3f4;
+  }
+
+  .info-row:last-child {
+    border-bottom: none;
+  }
+
+  .info-label {
+    font-weight: 600;
+    color: #495057;
+    min-width: 120px;
+  }
+
+  .info-value {
+    color: #6c757d;
+    flex: 1;
+    text-align: right;
+  }
+
+  .breadcrumb-custom {
+    background: #fff;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .btn-back {
+    background: linear-gradient(135deg, #6c757d 0%, #868e96 100%);
+    border: none;
     color: white;
-    border-color: #467bcb;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
   }
 
-  .accordion-button:focus {
-    box-shadow: 0 0 0 0.25rem rgba(70, 123, 203, 0.25);
+  .btn-back:hover {
+    background: linear-gradient(135deg, #495057 0%, #6c757d 100%);
+    color: white;
+    transform: translateY(-1px);
+  }
+
+  .gpa-circle {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #467bcb 0%, #5a8dd8 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 1.25rem;
+    margin: 0 auto;
   }
 
   @media (max-width: 767.98px) {
-    .main-content {
-      padding: 1rem;
-    }
-
-    .search-section {
+    .profile-header {
       padding: 1.5rem;
+      text-align: center;
     }
 
-    .alumni-avatar {
-      width: 60px;
-      height: 60px;
+    .profile-avatar {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 1rem auto;
     }
 
-    .alumni-contact {
+    .contact-links {
       justify-content: center;
+    }
+
+    .info-row {
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: left;
+    }
+
+    .info-value {
+      text-align: left;
+      margin-top: 0.25rem;
+    }
+
+    .detail-card-body {
+      padding: 1rem;
     }
   }
 </style>
@@ -215,366 +285,212 @@ require_once '../../config/config.php';
   <?php include '../../includes/navbar.php' ?>
 
   <div class="container px-4 py-3">
-    <div class="row alumni-container">
-      <!-- Sidebar -->
-      <div class="col-lg-3 col-md-4">
-        <!-- Desktop Sidebar -->
-        <div class="d-none d-lg-block">
-          <div class="sidebar-nav">
-            <h5 class="mb-4">
-              <i class="fas fa-users me-2 text-primary"></i>
-              รายชื่อศิษย์เก่า
-            </h5>
+    <!-- Breadcrumb -->
+    <div class="breadcrumb-custom">
+      <div class="d-flex justify-content-between align-items-center">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+              <a href="#" class="text-decoration-none">
+                <i class="fas fa-home"></i> หน้าแรก
+              </a>
+            </li>
+            <li class="breadcrumb-item">
+              <a href="#" class="text-decoration-none">รายชื่อศิษย์เก่า</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+              นายอัครเดช สมบูรณ์
+            </li>
+          </ol>
+        </nav>
+        <button onclick="history.back()" class="btn btn-back">
+          <i class="fas fa-arrow-left me-2"></i>กลับ
+        </button>
+      </div>
+    </div>
 
-            <!-- Statistics -->
-            <div class="row g-2 mb-4">
-              <div class="col-12">
-                <div class="stats-card">
-                  <div class="stats-number">1,247</div>
-                  <small class="text-muted">สมาขิกศิษย์เก่า</small>
-                </div>
-              </div>
-            </div>
-
-            <!-- Navigation Menu -->
-            <nav class="nav nav-pills flex-column">
-              <a href="javascript:void(0)" class="nav-link active" onclick="filterAlumni('all')">
-                <i class="fas fa-list me-2"></i>ทั้งหมด
-              </a>
-              <a href="javascript:void(0)" class="nav-link" onclick="filterAlumni('certificate')">
-                <i class="fas fa-certificate me-2"></i>ปวช.
-              </a>
-              <a href="javascript:void(0)" class="nav-link" onclick="filterAlumni('diploma')">
-                <i class="fas fa-graduation-cap me-2"></i>ปวส.
-              </a>
-              <a href="javascript:void(0)" class="nav-link" onclick="filterAlumni('employed')">
-                <i class="fas fa-briefcase me-2"></i>ทำงานแล้ว
-              </a>
-            </nav>
+    <div class="alumni-detail-container">
+      <!-- Profile Header -->
+      <div class="profile-header">
+        <div class="row align-items-center">
+          <div class="col-lg-3 col-md-4 text-center mb-3 mb-md-0">
+            <img src="https://bootdey.com/img/Content/avatar/avatar1.png" class="rounded-circle profile-avatar" alt="นายอัครเดช สมบูรณ์">
           </div>
-        </div>
-
-        <!-- Mobile/Tablet Accordion -->
-        <div class="d-lg-none mb-3">
-          <div class="accordion" id="sidebarAccordion">
-            <div class="accordion-item">
-              <h2 class="accordion-header">
-                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter" aria-expanded="true">
-                  <i class="fas fa-filter me-2"></i>
-                  ตัวกรอง
-                </button>
-              </h2>
-              <div id="collapseFilter" class="accordion-collapse collapse show" data-bs-parent="#sidebarAccordion">
-                <div class="accordion-body p-2">
-                  <nav class="nav nav-pills flex-column">
-                    <a href="javascript:void(0)" class="nav-link active" onclick="filterAlumni('all')">
-                      <i class="fas fa-list me-2"></i>ทั้งหมด
-                    </a>
-                    <a href="javascript:void(0)" class="nav-link" onclick="filterAlumni('recent')">
-                      <i class="fas fa-star me-2"></i>รุ่นใหม่ล่าสุด
-                    </a>
-                    <a href="javascript:void(0)" class="nav-link" onclick="filterAlumni('senior')">
-                      <i class="fas fa-crown me-2"></i>รุ่นอาวุโส
-                    </a>
-                    <a href="javascript:void(0)" class="nav-link" onclick="filterAlumni('certificate')">
-                      <i class="fas fa-certificate me-2"></i>ปวช.
-                    </a>
-                    <a href="javascript:void(0)" class="nav-link" onclick="filterAlumni('diploma')">
-                      <i class="fas fa-graduation-cap me-2"></i>ปวส.
-                    </a>
-                    <a href="javascript:void(0)" class="nav-link" onclick="filterAlumni('employed')">
-                      <i class="fas fa-briefcase me-2"></i>ทำงานแล้ว
-                    </a>
-                  </nav>
-                </div>
-              </div>
+          <div class="col-lg-6 col-md-8">
+            <h2 class="mb-2">นายอัครเดช สมบูรณ์</h2>
+            <h5 class="mb-3 opacity-75">
+              ปวส. คอมพิวเตอร์ธุรกิจ | รหัสนักศึกษา: 66120001
+            </h5>
+            <div class="status-badge mb-3">
+              <i class="fas fa-graduation-cap me-2"></i>กำลังศึกษา
             </div>
+            <p class="mb-0 opacity-75">
+              <i class="fas fa-calendar me-2"></i>ปีการศึกษา 2567
+            </p>
+          </div>
+          <div class="col-lg-3 text-center">
+            <div class="gpa-circle">
+              3.65
+            </div>
+            <small class="d-block mt-2 opacity-75">เกรดเฉลี่ย</small>
           </div>
         </div>
       </div>
 
-      <!-- Main Content -->
-      <div class="col-lg-9 col-md-8">
-        <div class="main-content">
-          <!-- Search Section -->
-          <div class="search-section">
-            <div class="text-center mb-3">
-              <h2 class="mb-2">
-                <i class="fas fa-search me-2"></i>
-                รวมสมาขิกศิษย์เก่า
-              </h2>
-              <p class="mb-0 opacity-75">แผนกวิชาคอมพิวเตอร์ธุรกิจ วิทยาลัยเทคนนิคอ่างทอง</p>
+      <div class="row">
+        <!-- Left Column -->
+        <div class="col-lg-8">
+          <!-- Personal Information -->
+          <div class="detail-card">
+            <div class="detail-card-header">
+              <i class="fas fa-user me-2"></i>ข้อมูลส่วนตัว
             </div>
-
-            <div class="search-card">
-              <div class="row g-3">
-                <div class="col-md-4">
-                  <label class="form-label text-dark">ชื่อ-นามสกุล</label>
-                  <input type="text" class="form-control" id="searchName" placeholder="ค้นหาชื่อ...">
-                </div>
-                <div class="col-md-3">
-                  <label class="form-label text-dark">ปีการศึกษา</label>
-                  <select class="form-select" id="searchYear">
-                    <option value="">ทั้งหมด</option>
-                    <option value="2567">2567</option>
-                    <option value="2566">2566</option>
-                    <option value="2565">2565</option>
-                    <option value="2564">2564</option>
-                    <option value="2563">2563</option>
-                  </select>
-                </div>
-                <div class="col-md-3">
-                  <label class="form-label text-dark">ระดับชั้น</label>
-                  <select class="form-select" id="searchLevel">
-                    <option value="">ทั้งหมด</option>
-                    <option value="ปวช.">ปวช.</option>
-                    <option value="ปวส.">ปวส.</option>
-                  </select>
-                </div>
-                <div class="col-md-2">
-                  <label class="form-label text-dark">&nbsp;</label>
-                  <button class="btn btn-primary w-100" onclick="searchAlumni()">
-                    <i class="fas fa-search"></i>
-                  </button>
-                </div>
+            <div class="detail-card-body">
+              <div class="info-row">
+                <span class="info-label">ชื่อ-นามสกุล</span>
+                <span class="info-value">นายอัครเดช สมบูรณ์</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">รหัสนักศึกษา</span>
+                <span class="info-value">66120001</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">วันเกิด</span>
+                <span class="info-value">15 มีนาคม 2548 (อายุ 20 ปี)</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">ระดับการศึกษา</span>
+                <span class="info-value">ปวส. คอมพิวเตอร์ธุรกิจ</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">ปีการศึกษา</span>
+                <span class="info-value">2567</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">วันที่จบการศึกษา</span>
+                <span class="info-value">มีนาคม 2568 (คาดการณ์)</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">เกรดเฉลี่ย</span>
+                <span class="info-value">3.65</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">ที่อยู่</span>
+                <span class="info-value">123 หมู่ 5 ตำบลวิเศษไชยชาญ อำเภอวิเศษไชยชาญ จังหวัดอ่างทอง 14110</span>
               </div>
             </div>
           </div>
 
-          <!-- Filter Section -->
-          <div class="filter-section">
-            <div class="row align-items-center">
-              <div class="col-md-6">
-                <div class="d-flex align-items-center">
-                  <span class="me-3 text-muted">เรียงโดย:</span>
-                  <select class="form-select form-select-sm" style="width: auto;" onchange="sortAlumni(this.value)">
-                    <option value="name">ชื่อ A-Z</option>
-                    <option value="year">ปีการศึกษา</option>
-                    <option value="level">ระดับชั้น</option>
-                    <option value="recent">เพิ่มล่าสุด</option>
-                  </select>
-                </div>
+          <!-- Skills -->
+          <div class="detail-card">
+            <div class="detail-card-header">
+              <i class="fas fa-tools me-2"></i>ทักษะความสามารถ
+            </div>
+            <div class="detail-card-body">
+              <span class="skill-badge">PHP</span>
+              <span class="skill-badge">JavaScript</span>
+              <span class="skill-badge">MySQL</span>
+              <span class="skill-badge">HTML/CSS</span>
+              <span class="skill-badge">Bootstrap</span>
+              <span class="skill-badge">React</span>
+              <span class="skill-badge">Node.js</span>
+              <span class="skill-badge">Python</span>
+            </div>
+          </div>
+
+          <!-- Projects -->
+          <div class="detail-card">
+            <div class="detail-card-header">
+              <i class="fas fa-project-diagram me-2"></i>ผลงาน/โครงการ
+            </div>
+            <div class="detail-card-body">
+              <div class="project-card">
+                <div class="project-title">ระบบจัดการร้านค้าออนไลน์</div>
+                <p class="mb-2 text-muted">พัฒนาระบบจัดการสินค้าและการขายออนไลน์ด้วย PHP และ MySQL พร้อมระบบจัดการคำสั่งซื้อและรายงานยอดขาย</p>
+                <span class="project-tech">PHP, MySQL, Bootstrap, JavaScript</span>
               </div>
-              <div class="col-md-6">
-                <div class="d-flex justify-content-md-end align-items-center">
-                  <span class="me-2 text-muted">แสดง:</span>
-                  <div class="btn-group btn-group-sm" role="group">
-                    <button type="button" class="btn btn-outline-primary active" onclick="setView('grid')">
-                      <i class="fas fa-th"></i>
-                    </button>
-                    <button type="button" class="btn btn-outline-primary" onclick="setView('list')">
-                      <i class="fas fa-list"></i>
-                    </button>
-                  </div>
-                </div>
+              <div class="project-card">
+                <div class="project-title">แอปพลิเคชันบันทึกค่าใช้จ่าย</div>
+                <p class="mb-2 text-muted">แอปพลิเคชันสำหรับบันทึกและติดตามค่าใช้จ่ายรายวัน พร้อมกราฟแสดงสถิติการใช้จ่าย</p>
+                <span class="project-tech">React Native, Firebase, Chart.js</span>
+              </div>
+              <div class="project-card">
+                <div class="project-title">เว็บไซต์พอร์ตโฟลิโอส่วนตัว</div>
+                <p class="mb-2 text-muted">เว็บไซต์แสดงผลงานและประวัติส่วนตัว พร้อมระบบ Contact Form และ Blog</p>
+                <span class="project-tech">HTML, CSS, JavaScript, PHP</span>
               </div>
             </div>
           </div>
 
-          <!-- Alumni Grid -->
-          <div id="alumniGrid" class="row g-4">
-            <!-- Alumni Card 1 -->
-            <div class="col-lg-4 col-md-6 alumni-item" data-year="2567" data-level="ปวส." data-name="นายอัครเดช สมบูรณ์">
-              <div class="card alumni-card h-100 position-relative">
-                <div class="year-badge">2567</div>
-                <div class="card-body text-center">
-                  <img src="https://bootdey.com/img/Content/avatar/avatar1.png" class="rounded-circle alumni-avatar mx-auto mb-3" alt="Alumni">
-                  <div class="alumni-info">
-                    <h5>นายอัครเดช สมบูรณ์</h5>
-                    <p class="text-muted mb-2">ปวส.3 คอมพิวเตอร์ธุรกิจ</p>
-                    <span class="alumni-badge">กำลังศึกษา</span>
-                    <div class="alumni-contact">
-                      <a href="mailto:akkaradet@email.com" class="contact-btn">
-                        <i class="fas fa-envelope"></i>
-                      </a>
-                      <a href="tel:0812345678" class="contact-btn">
-                        <i class="fas fa-phone"></i>
-                      </a>
-                      <a href="#" class="contact-btn">
-                        <i class="fab fa-facebook"></i>
-                      </a>
-                      <a href="#" class="contact-btn">
-                        <i class="fab fa-line"></i>
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+          
+        </div>
 
-            <!-- Alumni Card 2 -->
-            <div class="col-lg-4 col-md-6 alumni-item" data-year="2566" data-level="ปวส." data-name="นางสาวสุพิชญา แสงทอง">
-              <div class="card alumni-card h-100 position-relative">
-                <div class="year-badge">2566</div>
-                <div class="card-body text-center">
-                  <img src="https://bootdey.com/img/Content/avatar/avatar2.png" class="rounded-circle alumni-avatar mx-auto mb-3" alt="Alumni">
-                  <div class="alumni-info">
-                    <h5>นางสาวสุพิชญา แสงทอง</h5>
-                    <p class="text-muted mb-2">ปวส. คอมพิวเตอร์ธุรกิจ</p>
-                    <span class="alumni-badge">ทำงานแล้ว</span>
-                    <p class="mt-2 mb-2 text-muted small">Web Developer @ ABC Company</p>
-                    <div class="alumni-contact">
-                      <a href="mailto:supitchaya@email.com" class="contact-btn">
-                        <i class="fas fa-envelope"></i>
-                      </a>
-                      <a href="tel:0823456789" class="contact-btn">
-                        <i class="fas fa-phone"></i>
-                      </a>
-                      <a href="#" class="contact-btn">
-                        <i class="fab fa-facebook"></i>
-                      </a>
-                      <a href="#" class="contact-btn">
-                        <i class="fab fa-linkedin"></i>
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
+        <!-- Right Column -->
+        <div class="col-lg-4">
+          <!-- Contact Information -->
+          <div class="detail-card">
+            <div class="detail-card-header">
+              <i class="fas fa-address-book me-2"></i>ช่องทางติดต่อ
             </div>
-
-            <!-- Alumni Card 3 -->
-            <div class="col-lg-4 col-md-6 alumni-item" data-year="2565" data-level="ปวช." data-name="นายธนากร เจริญสุข">
-              <div class="card alumni-card h-100 position-relative">
-                <div class="year-badge">2565</div>
-                <div class="card-body text-center">
-                  <img src="https://bootdey.com/img/Content/avatar/avatar3.png" class="rounded-circle alumni-avatar mx-auto mb-3" alt="Alumni">
-                  <div class="alumni-info">
-                    <h5>นายธนากร เจริญสุข</h5>
-                    <p class="text-muted mb-2">ปวช. คอมพิวเตอร์ธุรกิจ</p>
-                    <span class="alumni-badge">ทำงานแล้ว</span>
-                    <p class="mt-2 mb-2 text-muted small">IT Support @ XYZ Ltd.</p>
-                    <div class="alumni-contact">
-                      <a href="mailto:thanakorn@email.com" class="contact-btn">
-                        <i class="fas fa-envelope"></i>
-                      </a>
-                      <a href="tel:0834567890" class="contact-btn">
-                        <i class="fas fa-phone"></i>
-                      </a>
-                      <a href="#" class="contact-btn">
-                        <i class="fab fa-facebook"></i>
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Alumni Card 4 -->
-            <div class="col-lg-4 col-md-6 alumni-item" data-year="2566" data-level="ปวช." data-name="นางสาวพิมพ์ใจ รักดี">
-              <div class="card alumni-card h-100 position-relative">
-                <div class="year-badge">2566</div>
-                <div class="card-body text-center">
-                  <img src="https://bootdey.com/img/Content/avatar/avatar4.png" class="rounded-circle alumni-avatar mx-auto mb-3" alt="Alumni">
-                  <div class="alumni-info">
-                    <h5>นางสาวพิมพ์ใจ รักดี</h5>
-                    <p class="text-muted mb-2">ปวช. คอมพิวเตอร์ธุรกิจ</p>
-                    <span class="alumni-badge">ศึกษาต่อ</span>
-                    <p class="mt-2 mb-2 text-muted small">ปวส. มหาวิทยาลัยเทคโนโลยี</p>
-                    <div class="alumni-contact">
-                      <a href="mailto:pimjai@email.com" class="contact-btn">
-                        <i class="fas fa-envelope"></i>
-                      </a>
-                      <a href="tel:0845678901" class="contact-btn">
-                        <i class="fas fa-phone"></i>
-                      </a>
-                      <a href="#" class="contact-btn">
-                        <i class="fab fa-instagram"></i>
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Alumni Card 5 -->
-            <div class="col-lg-4 col-md-6 alumni-item" data-year="2564" data-level="ปวส." data-name="นายณัฐพงษ์ สว่างใส">
-              <div class="card alumni-card h-100 position-relative">
-                <div class="year-badge">2564</div>
-                <div class="card-body text-center">
-                  <img src="https://bootdey.com/img/Content/avatar/avatar5.png" class="rounded-circle alumni-avatar mx-auto mb-3" alt="Alumni">
-                  <div class="alumni-info">
-                    <h5>นายณัฐพงษ์ สว่างใส</h5>
-                    <p class="text-muted mb-2">ปวส. คอมพิวเตอร์ธุรกิจ</p>
-                    <span class="alumni-badge">ทำงานแล้ว</span>
-                    <p class="mt-2 mb-2 text-muted small">Software Engineer @ Tech Corp</p>
-                    <div class="alumni-contact">
-                      <a href="mailto:nuttapong@email.com" class="contact-btn">
-                        <i class="fas fa-envelope"></i>
-                      </a>
-                      <a href="tel:0856789012" class="contact-btn">
-                        <i class="fas fa-phone"></i>
-                      </a>
-                      <a href="#" class="contact-btn">
-                        <i class="fab fa-github"></i>
-                      </a>
-                      <a href="#" class="contact-btn">
-                        <i class="fab fa-linkedin"></i>
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Alumni Card 6 -->
-            <div class="col-lg-4 col-md-6 alumni-item" data-year="2563" data-level="ปวช." data-name="นางสาวกัญญา มีสุข">
-              <div class="card alumni-card h-100 position-relative">
-                <div class="year-badge">2563</div>
-                <div class="card-body text-center">
-                  <img src="https://bootdey.com/img/Content/avatar/avatar6.png" class="rounded-circle alumni-avatar mx-auto mb-3" alt="Alumni">
-                  <div class="alumni-info">
-                    <h5>นางสาวกัญญา มีสุข</h5>
-                    <p class="text-muted mb-2">ปวช. คอมพิวเตอร์ธุรกิจ</p>
-                    <span class="alumni-badge">ประกอบธุรกิจ</span>
-                    <p class="mt-2 mb-2 text-muted small">เจ้าของร้าน Online Shop</p>
-                    <div class="alumni-contact">
-                      <a href="mailto:kanya@email.com" class="contact-btn">
-                        <i class="fas fa-envelope"></i>
-                      </a>
-                      <a href="tel:0867890123" class="contact-btn">
-                        <i class="fas fa-phone"></i>
-                      </a>
-                      <a href="#" class="contact-btn">
-                        <i class="fab fa-facebook"></i>
-                      </a>
-                      <a href="#" class="contact-btn">
-                        <i class="fab fa-instagram"></i>
-                      </a>
-                    </div>
-                  </div>
-                </div>
+            <div class="detail-card-body">
+              <div class="contact-links">
+                <a href="mailto:akkaradet@email.com" class="contact-link">
+                  <i class="fas fa-envelope"></i>อีเมล
+                </a>
+                <a href="tel:0812345678" class="contact-link">
+                  <i class="fas fa-phone"></i>โทรศัพท์
+                </a>
+                <a href="#" class="contact-link">
+                  <i class="fab fa-facebook"></i>Facebook
+                </a>
+                <a href="#" class="contact-link">
+                  <i class="fab fa-line"></i>Line
+                </a>
+                <a href="#" class="contact-link">
+                  <i class="fab fa-instagram"></i>Instagram
+                </a>
+                <a href="#" class="contact-link">
+                  <i class="fab fa-linkedin"></i>LinkedIn
+                </a>
+                <a href="#" class="contact-link">
+                  <i class="fab fa-github"></i>GitHub
+                </a>
               </div>
             </div>
           </div>
 
-          <!-- Pagination -->
-          <div class="d-flex justify-content-center mt-5">
-            <nav aria-label="Alumni pagination">
-              <ul class="pagination">
-                <li class="page-item disabled">
-                  <span class="page-link"><i class="fas fa-chevron-left"></i></span>
-                </li>
-                <li class="page-item"><a class="page-link" href="javascript:void(0)">1</a></li>
-                <li class="page-item active"><span class="page-link">2</span></li>
-                <li class="page-item"><a class="page-link" href="javascript:void(0)">3</a></li>
-                <li class="page-item"><a class="page-link" href="javascript:void(0)">4</a></li>
-                <li class="page-item">
-                  <a class="page-link" href="javascript:void(0)"><i class="fas fa-chevron-right"></i></a>
-                </li>
-              </ul>
-            </nav>
+          <!-- Certificates -->
+          <div class="detail-card">
+            <div class="detail-card-header">
+              <i class="fas fa-certificate me-2"></i>ใบประกาศนียบัตร/รางวัล
+            </div>
+            <div class="detail-card-body">
+              <div class="certificate-item">
+                <i class="fas fa-award text-primary me-2"></i>การพัฒนาเว็บไซต์ด้วย PHP
+              </div>
+              <div class="certificate-item">
+                <i class="fas fa-award text-primary me-2"></i>Microsoft Office Specialist
+              </div>
+              <div class="certificate-item">
+                <i class="fas fa-award text-primary me-2"></i>Google Analytics Individual Qualification
+              </div>
+              <div class="certificate-item">
+                <i class="fas fa-award text-primary me-2"></i>รางวัลโครงการดีเด่น ปีการศึกษา 2566
+              </div>
+            </div>
           </div>
+
+          
+          
         </div>
       </div>
     </div>
   </div>
 
-
   <?php include '../../includes/footer.php' ?>
 
   <script src="../../assets/js/bootstrap.bundle.min.js"></script>
-
-
-</body>
+  
+  </body>
 
 </html>

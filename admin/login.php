@@ -186,9 +186,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['username']) && isset(
                 <input type="password" name="password" id="inputPassword" class="form-control" placeholder="รหัสผ่าน" required>
                 <button class="btn btn-lg btn-primary btn-block btn-signin" type="button" onclick="login()" >เข้าสู่ระบบ</button>
             </form><!-- /form -->
-            <a href="#" class="forgot-password">
-                ลืมรหัสผ่าน
-            </a>
         </div><!-- /card-container -->
     </div><!-- /container -->
 

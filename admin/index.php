@@ -1,10 +1,12 @@
-<?php 
+<?php
 require_once '../auth/auth_admin.php';
-require_once '../classes/admin.php';
+require_once '../classes/user.php';
 
 $db = new Database();
 $conn = $db->connect();
-$admin = new Admin($conn, 'admin');
+$user_approval = new UserApproval($conn);
+$user_approval_list = $user_approval->getRegisterWaiingApprove(10, 0);
+
 
 ?>
 <!DOCTYPE html>
@@ -17,13 +19,9 @@ $admin = new Admin($conn, 'admin');
   <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
   <link href="../assets/css/bootstrap-icons.min.css" rel="stylesheet">
   <link href="../assets/css/style_admin.css" rel="stylesheet">
+  <link href="../assets/css/sweetalert2.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: var(--light-bg);
-    }
-
     /* Dashboard Cards */
     .stats-card {
       background: white;
@@ -33,6 +31,10 @@ $admin = new Admin($conn, 'admin');
       border: 1px solid rgba(0, 0, 0, 0.05);
       transition: transform 0.3s ease, box-shadow 0.3s ease;
       height: 100%;
+    }
+
+    .header {
+      color: var(--primary-color);
     }
 
     .stats-card:hover {
@@ -146,22 +148,6 @@ $admin = new Admin($conn, 'admin');
       padding: 6px 12px;
     }
 
-    .action-btn {
-      width: 32px;
-      height: 32px;
-      border-radius: 6px;
-      border: none;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 2px;
-      transition: all 0.3s ease;
-    }
-
-    .action-btn:hover {
-      transform: scale(1.1);
-    }
-
     .section-title {
       color: var(--primary-color);
       font-weight: 700;
@@ -228,7 +214,11 @@ $admin = new Admin($conn, 'admin');
   <!-- Main Content -->
   <div class="main-content">
     <!-- Dashboard Stats -->
-    <h2 class="section-title">สถิติเว็บไซต์</h2>
+    <h2 class="section-title">หน้าหลัก</h2>
+    <div class="header text-center mb-4">
+      <h2>ยินดีต้อนรับผู้ดูแลระบบ</h2>
+      <h2>ระบบจัดการข้อมูล เว็บไซต์สายใยคอมพิวเตอร์ธุรกิจ วิทยาลัยเทคนิคอ่างทอง</h2>
+    </div>
     <div class="row mb-5">
       <div class="col-xl-3 col-md-6 mb-4">
         <div class="stats-card primary">
@@ -236,10 +226,24 @@ $admin = new Admin($conn, 'admin');
             <i class="fas fa-users"></i>
           </div>
           <h3>254,487</h3>
-          <div class="label">ผู้เยี่ยมชมวันนี้</div>
+          <div class="label">ผู้เยี่ยมชมเว็บไซต์</div>
           <div class="trend up">
             <i class="fas fa-arrow-up"></i>
             <span>7% เพิ่มขึ้นจากเมื่อวาน</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-3 col-md-6 mb-4">
+        <div class="stats-card warning">
+          <div class="icon">
+            <i class="fas fa-user"></i>
+          </div>
+          <h3>2,000</h3>
+          <div class="label">สมาชิกในเว็บไซต์</div>
+          <div class="trend up">
+            <i class="fas fa-shopping-bag"></i>
+            <span>954 ขายในเดือนนี้</span>
           </div>
         </div>
       </div>
@@ -259,26 +263,12 @@ $admin = new Admin($conn, 'admin');
       </div>
 
       <div class="col-xl-3 col-md-6 mb-4">
-        <div class="stats-card warning">
-          <div class="icon">
-            <i class="fas fa-shopping-cart"></i>
-          </div>
-          <h3>2,423</h3>
-          <div class="label">คำสั่งซื้อใหม่</div>
-          <div class="trend up">
-            <i class="fas fa-shopping-bag"></i>
-            <span>954 ขายในเดือนนี้</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-xl-3 col-md-6 mb-4">
         <div class="stats-card danger">
           <div class="icon">
-            <i class="fas fa-dollar-sign"></i>
+            <i class="fas fa-user"></i>
           </div>
-          <h3>$7,428</h3>
-          <div class="label">รายได้</div>
+          <h3>12</h3>
+          <div class="label">คำขอลงทะเบียนใหม่</div>
           <div class="trend up">
             <i class="fas fa-chart-line"></i>
             <span>$22,675 รายได้รวม</span>
@@ -289,46 +279,62 @@ $admin = new Admin($conn, 'admin');
 
     <!-- User Table -->
     <div class="table-container">
-      <h4 class="table-header">สมาชิกล่าสุด</h4>
+      <h4 class="table-header">คำขอลงทะเบียนล่าสุด</h4>
       <div class="table-responsive">
         <table class="table">
           <thead>
             <tr>
-              <th>ผู้ใช้</th>
-              <th>วันที่สมัคร</th>
-              <th class="text-center">สถานะ</th>
-              <th>อีเมล</th>
+              <th>ลำดับที่</th>
+              <th>รหัสนักศึกษา</th>
+              <th>ชื่อ-นามสกุล</th>
+              <th>อิเมลล์</th>
+              <th>เบอร์โทรศัพท์</th>
+              <th>ประเภทผู้ใช้</th>
+              <th>ระดับชั้นที่ศึกษาปัจจุบัน<br> / ระดับชั้นที่จบการศึกษา</th>
+              <th>ปีที่จบการศึกษา</th>
+              <th>สถานะ</th>
+              <th>วันที่ลงทะเบียน</th>
               <th class="text-center">จัดการ</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>
-                <div class="d-flex align-items-center">
-                  <img src="https://bootdey.com/img/Content/user_1.jpg" alt="User" class="user-avatar me-3">
-                  <div>
-                    <div class="fw-bold">สมชาย ใจดี</div>
-                    <small class="text-muted">สมาชิก</small>
-                  </div>
-                </div>
-              </td>
-              <td>12/08/2024</td>
-              <td class="text-center">
-                <span class="badge bg-warning">รอการอนุมัติ</span>
-              </td>
-              <td>somchai@example.com</td>
-              <td class="text-center">
-                <button class="action-btn btn-outline-info">
-                  <i class="fas fa-eye"></i>
-                </button>
-                <button class="action-btn btn-outline-primary">
-                  <i class="fas fa-edit"></i>
-                </button>
-                <button class="action-btn btn-outline-danger">
-                  <i class="fas fa-trash"></i>
-                </button>
-              </td>
-            </tr>
+
+
+            <?php if (!empty($user_approval_list)) {
+              $i = 1;
+              foreach ($user_approval_list as $item) {
+                $id = $item['user_id'];
+                $student_code = $item['student_code'];
+                $full_name = $item['first_name'] . ' ' . $item['last_name'];
+                $email = $item['email'];
+                $phone = $item['phone'];
+                $user_type = $item['user_type'];
+                $education_level = $item['education_level'];
+                $graduation_year = $item['graduation_year'] == 0 ? 'นักศึกษาปัจจุบัน' : $item['graduation_year'];
+                $status_register = $item['status_register'] == 2 ? 'รอดำเนินการตรวจสอบ' : '';
+                $created_at = date('d/m/Y H:i', strtotime($item['created_at']));
+            ?>
+                <tr>
+                  <td>
+                    <?= $i++; ?>
+                  </td>
+                  <td class="text-center"><?php echo $student_code; ?></td>
+                  <td><?php echo $full_name; ?></td>
+                  <td><?php echo $email; ?></td>
+                  <td><?php echo $phone; ?></td>
+                  <td><?php echo $user_type; ?></td>
+                  <td class="text-center"><?php echo $education_level; ?></td>
+                  <td class="text-center"><?php echo $graduation_year; ?></td>
+                  <td><?php echo $status_register; ?></td>
+                  <td><?php echo $created_at; ?></td>
+                  <td class="text-center">
+                    <button class="btn btn-success" onclick="approveUser(<?php echo $id ?>)">อนุมัติ</button>
+                    <button class="btn btn-danger" onclick="rejectUser(<?php echo $id ?>)">ไม่อนุมัติ</button>
+                  </td>
+                </tr>
+            <?php }
+            } ?>
+    <!--
             <tr>
               <td>
                 <div class="d-flex align-items-center">
@@ -383,14 +389,87 @@ $admin = new Admin($conn, 'admin');
                 </button>
               </td>
             </tr>
+            -->
           </tbody>
         </table>
+
+        <?php if (empty($user_approval_list)) { ?>
+            <div class="text-center text-danger p-5">ไม่พบข้อมูลผู้ลงทะเบียนใหม่</div>
+        <?php } ?>
+
       </div>
     </div>
   </div>
 
   <script src="../assets/js/bootstrap.bundle.js"></script>
   <script src="../assets/js/script_admin.js"></script>
+  <script src="../assets/js/sweetalert2.all.min.js"></script>
+  <script src="../assets/alerts/modal.js"></script>
 </body>
+<script>
+        function approveUser(userId) {
+            return modalConfirm('อนุมัติการลงทะเบียนผู้ใช้', `ยืนยันการอนุมัติลงทะเบียนบัญชีผู้ใช้ที่ ID ${userId} ใช่ไหม?`)
+                .then((result) => {
+                    if (result.isConfirmed) {
+                        fetch('user/user_approval/approve.php', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded'
+                                },
+                                body: 'id=' + encodeURIComponent(userId)
+                            })
+                            .then(response => response.json())
+                            .then(response => {
+
+                                if (response.result) {
+                                    modalAlert(`อนุมัติบัญชีผู้ใช้สำเร็จ`, `อนุมัติบัญชีผู้ใช้ ID ${userId} สำเร็จ`, 'success')
+                                        .then(() => {
+                                            location.reload();
+                                        })
+                                } else {
+                                    modalAlert(`อนุมัติบัญชีผู้ใช้ไม่สำเร็จ`, response.message, 'error')
+                                }
+                            })
+                            .catch(error => {
+                                modalAlert('การเชื่อมต่อล้มเหลว', 'ไม่สามารถติดต่อกับเซิร์ฟเวอร์ได้', 'error');
+                                console.error('Fetch error:', error);
+                            });
+                    }
+
+                })
+        }
+
+        function rejectUser(userId) {
+            return modalConfirm('ปฏิเสธการลงทะเบียนผู้ใช้', `ปฏิเสธการลงทะเบียนผู้ใช้ ID ${userId} ใช่ไหม?`)
+                .then((result) => {
+                    if (result.isConfirmed) {
+                        fetch('user/user_approval/reject.php', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded'
+                                },
+                                body: 'id=' + encodeURIComponent(userId)
+                            })
+                            .then(response => response.json())
+                            .then(response => {
+
+                                if (response.result) {
+                                    modalAlert(`ปฏิเสธการอนุมัติบัญชีผู้ใช้สำเร็จ`, `ปฎิเสธการอนุมัติบัญชีผู้ใช้ ID ${userId} สำเร็จ`, 'success')
+                                        .then(() => {
+                                            location.reload();
+                                        })
+                                } else {
+                                    modalAlert(`ปฏิเสธการอนุมัติบัญชีผู้ใช้ไม่สำเร็จ`, response.message, 'error')
+                                }
+                            })
+                            .catch(error => {
+                                modalAlert('การเชื่อมต่อล้มเหลว', 'ไม่สามารถติดต่อกับเซิร์ฟเวอร์ได้', 'error');
+                                console.error('Fetch error:', error);
+                            });
+                    }
+
+                })
+        }
+    </script>
 
 </html>

@@ -55,7 +55,10 @@ class Activities
     //ดึงข้อมูลข่าวสารทั้งหมด
     public function getActivity($activity_id)
     {
-        $stmt = $this->conn->prepare("SELECT * FROM {$this->table} WHERE activity_id = :id");
+        $stmt = $this->conn->prepare("SELECT ac.*, a.first_name, a.last_name, a.image as image_profile, a.role FROM {$this->table} as ac 
+                                      INNER JOIN admin as a
+                                      ON ac.created_by = a.admin_id 
+                                      WHERE activity_id = :id");
 
         $stmt->bindParam(':id', $activity_id);
 

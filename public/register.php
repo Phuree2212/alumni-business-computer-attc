@@ -320,7 +320,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
   <?php include '../includes/footer.php' ?>
 
-  <script src="../assets/js/bootstrap.bundle.min.js"></script>
+  <script src="../assets/js/bootstrap.bundle.js"></script>
   <script src="../assets/js/sweetalert2.all.min.js"></script>
   <script src="../assets/alerts/modal.js"></script>
   <script src="function/validate_form.js"></script>

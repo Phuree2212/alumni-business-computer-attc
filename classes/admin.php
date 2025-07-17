@@ -105,15 +105,19 @@ class Admin
     public function login($username, $password)
     {
         try {
-            $stmt = $this->conn->prepare("SELECT admin_id, username, first_name, last_name, password FROM {$this->table} WHERE username = :username LIMIT 1");
+            $stmt = $this->conn->prepare("SELECT admin_id, username, first_name, last_name, role, position, image, password FROM {$this->table} WHERE username = :username LIMIT 1");
             $stmt->bindParam(':username', $username);
             $stmt->execute();
 
             if ($stmt->rowCount() === 1) {
                 $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
                 $id = $user['admin_id'];
+                $role = $user['role'];
+                $position = $user['position'];
                 $first_name = $user['first_name'];
                 $last_name = $user['last_name'];
+                $image = $user['image'];
                 $password_hashed = $user['password'];
 
                 //ตรวจสอบรหัสผ่านแบบ BCRYPT
@@ -121,8 +125,10 @@ class Admin
 
                     $_SESSION['user'] = ['id' => $id,
                                          'username' => $username,
-                                         'role' => $this->role == 'admin' ? USER_TYPE_ADMIN : USER_TYPE_TEACHER,
-                                         'fullname' => $first_name . ' ' . $last_name];
+                                         'role' => $role == 'admin' ? USER_TYPE_ADMIN : USER_TYPE_TEACHER,
+                                         'fullname' => $first_name . ' ' . $last_name,
+                                         'image' => $image,
+                                         'position' => $position];
 
                     return ['result' => true, 'message' => 'เข้าสู่ระบบสำเร็จ'];
                 } else {

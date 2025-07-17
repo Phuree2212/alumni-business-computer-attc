@@ -6,22 +6,36 @@
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <a href="#" class="logo">
+            <a href="<?php echo $base_url ?>/admin/" class="logo">
                 <img class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;" src="<?php echo $base_url; ?>/assets/images/logo/logo_department.png" alt="">
                 <span>ระบบจัดการข้อมูล เว็บไซต์สายใยคอมพิวเตอร์ธุรกิจ วิทยาลัยเทคนิคอ่างทอง</span>
             </a>
         </div>
-        
+
         <div class="sidebar-menu">
+            <div class="menu-category">โปรไฟล์</div>
+            <div class="menu-item">
+                <div class="d-flex align-items-center profile">
+                    <img src="<?php echo $base_url . '/assets/images/user/' .
+                                    ($_SESSION['user']['role'] == 3 ? 'admin' : 'teacher') . '/' .
+                                    $_SESSION['user']['image']; ?>"
+                        alt="User" class="user-avatar me-3">
+                    <div>
+                        <div class="fw-bold"><?php echo $_SESSION['user']['fullname'] ?></div>
+                        <small class="text-white"><?php echo $_SESSION['user']['position'] ?></small>
+                    </div>
+                </div>
+            </div>
+
             <div class="menu-category">หลัก</div>
-            
+
             <div class="menu-item">
                 <a href="<?php echo $base_url ?>/admin/" class="menu-link active">
                     <i class="fas fa-home"></i>
                     <span>หน้าหลัก</span>
                 </a>
             </div>
-            
+
             <div class="menu-item">
                 <a href="#" class="menu-link" data-bs-toggle="collapse" data-bs-target="#users-menu">
                     <i class="fas fa-users"></i>
@@ -79,30 +93,30 @@
             </div>
 
             <div class="menu-category">รายงาน</div>
-            
+
             <div class="menu-item">
                 <a href="#" class="menu-link">
                     <i class="fas fa-chart-bar"></i>
                     <span>สถิติการใช้งาน</span>
                 </a>
             </div>
-            
+
             <div class="menu-item">
                 <a href="#" class="menu-link">
                     <i class="fas fa-question"></i>
-                    <span>รายงานผู็ใช้งานที่ไม่เหมาะสม</span>
+                    <span>รายงานผู้ใช้งานที่ไม่เหมาะสม</span>
                 </a>
             </div>
 
             <div class="menu-category">ระบบ</div>
-            
+
             <div class="menu-item">
-                <a href="#" class="menu-link">
+                <a href="<?php echo $base_url ?>/admin/setting.php" class="menu-link">
                     <i class="fas fa-cog"></i>
-                    <span>ตั้งค่าระบบ</span>
+                    <span>ตั้งค่าเว็บไซต์</span>
                 </a>
             </div>
-            
+
             <div class="menu-item">
                 <a href="#" class="menu-link">
                     <i class="fas fa-database"></i>

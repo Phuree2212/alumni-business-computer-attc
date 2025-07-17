@@ -1,5 +1,35 @@
 <?php
 require_once '../../config/config.php';
+require_once '../../classes/news.php';
+require_once '../../classes/activities.php';
+require_once '../../config/function.php';
+
+$db = new Database();
+$conn = $db->connect();
+$news = new News($conn);
+$activity = new Activities($conn);
+
+$lastest_news = $news->getAllNews(5, 0);
+$lastest_activities = $activity->getAllActivity(5, 0);
+
+if ($_SERVER['REQUEST_METHOD'] == "GET" && !empty($_GET['id'])) {
+    $id = $_GET['id'];
+    $news_detail = $news->getNews($id);
+
+
+    $fullname = $news_detail['first_name'] . ' ' . $news_detail['last_name'];
+    $role = $news_detail['role'];
+    $image_profile = $news_detail['image_profile'];
+
+    $images = explode(',', $news_detail['image']);
+    $title = $news_detail['title'];
+    $content = $news_detail['content'];
+    $created_at = date('d-m-Y', strtotime($news_detail['created_at']));
+} else {
+    header('Location: index.php');
+    exit;
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -488,131 +518,113 @@ require_once '../../config/config.php';
             <div class="row align-items-start">
                 <div class="col-lg-8 m-15px-tb">
                     <article class="article">
-                        <div class="article-img">
-                            <img src="https://www.bootdey.com/image/800x350/87CEFA/000000" title="" alt="">
-                        </div>
+                        <?php if (!empty($images)) { ?>
+                            <?php foreach ($images as $image) { ?>
+                                <div class="article-img mb-3">
+                                    <img src="../../assets/images/news/<?php echo $image ?>" title="" alt="">
+                                </div>
+                        <?php }
+                        } ?>
                         <div class="article-title">
-                            <h6><a href="#">Lifestyle</a></h6>
-                            <h2>They Now Bade Farewell To The Kind But Unseen People</h2>
+                            <h2><?php echo $title ?></h2>
                             <div class="media">
                                 <div class="avatar">
-                                    <img src="https://bootdey.com/img/Content/avatar/avatar1.png" title="" alt="">
+                                    <img src="<?php echo !empty($image_profile) ? '../../assets/images/user/' . $role . '/' . $image_profile : '../../assets/images/user/no-image-profile.jpg'; ?>" title="" alt="">
                                 </div>
                                 <div class="media-body">
-                                    <label>Rachel Roth</label>
-                                    <span>26 FEB 2020</span>
+                                    <label><?php echo $fullname; ?></label>
+                                    <span><?php echo thaiDateFormat($created_at) ?></span>
                                 </div>
                             </div>
                         </div>
                         <div class="article-content">
-                            <p>Aenean eleifend ante maecenas pulvinar montes lorem et pede dis dolor pretium donec dictum. Vici consequat justo enim. Venenatis eget adipiscing luctus lorem. Adipiscing veni amet luctus enim sem libero tellus viverra venenatis aliquam. Commodo natoque quam pulvinar elit.</p>
-                            <p>Eget aenean tellus venenatis. Donec odio tempus. Felis arcu pretium metus nullam quam aenean sociis quis sem neque vici libero. Venenatis nullam fringilla pretium magnis aliquam nunc vulputate integer augue ultricies cras. Eget viverra feugiat cras ut. Sit natoque montes tempus ligula eget vitae pede rhoncus maecenas consectetuer commodo condimentum aenean.</p>
-                            <h4>What are my payment options?</h4>
-                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-                            <blockquote>
-                                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.</p>
-                                <p class="blockquote-footer">Someone famous in <cite title="Source Title">Dick Grayson</cite></p>
-                            </blockquote>
-                            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-                        </div>
-                        <div class="nav tag-cloud">
-                            <a href="#">Design</a>
-                            <a href="#">Development</a>
-                            <a href="#">Travel</a>
-                            <a href="#">Web Design</a>
-                            <a href="#">Marketing</a>
-                            <a href="#">Research</a>
-                            <a href="#">Managment</a>
+                            <?php echo $content ?>
                         </div>
                     </article>
-                    
+                    <div>
+                        <a href="index.php" class="btn btn-secondary">ย้อนกลับ</a>
+                    </div>
+
                 </div>
                 <div class="col-lg-4 m-15px-tb blog-aside">
-                    
+
                     <!-- Latest Post -->
                     <div class="widget widget-latest-post">
                         <div class="widget-title">
-                            <h3>Latest Post</h3>
+                            <h3>ข่าวสาร/ประชาสัมพนธ์ ล่าสุด</h3>
                         </div>
                         <div class="widget-body">
-                            <div class="latest-post-aside media">
-                                <div class="lpa-left media-body">
-                                    <div class="lpa-title">
-                                        <h5><a href="#">Prevent 75% of visitors from google analytics</a></h5>
+                            <?php if (!empty($lastest_news)) { ?>
+                                <?php foreach ($lastest_news as $news) {
+                                    $id = $news['news_id'];
+                                    $title = $news['title'];
+                                    $image = explode(',', $news['image'])[0];
+                                    $created_at = date('d-m-Y', strtotime($news['created_at']));
+
+                                ?>
+                                    <div class="latest-post-aside media">
+                                        <div class="lpa-left media-body">
+                                            <div class="lpa-title">
+                                                <h5><a href="detail.php?id=<?php echo $id ?>"><?php echo $title ?></a></h5>
+                                            </div>
+                                            <div class="lpa-meta">
+                                                <a class="name" href="detail.php?id=<?php echo $id ?></a>">
+                                                    Rachel Roth
+                                                </a>
+                                                <a class="date" href="detail.php?id=<?php echo $id ?></a>">
+                                                    <?php echo thaiDateFormat($created_at) ?>
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="lpa-right">
+                                            <a href="#">
+                                                <img src="../../assets/images/news/<?php echo $image ?>" title="" alt="">
+                                            </a>
+                                        </div>
                                     </div>
-                                    <div class="lpa-meta">
-                                        <a class="name" href="#">
-                                            Rachel Roth
-                                        </a>
-                                        <a class="date" href="#">
-                                            26 FEB 2020
-                                        </a>
-                                    </div>
-                                </div>
-                                <div class="lpa-right">
-                                    <a href="#">
-                                        <img src="https://www.bootdey.com/image/400x200/FFB6C1/000000" title="" alt="">
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="latest-post-aside media">
-                                <div class="lpa-left media-body">
-                                    <div class="lpa-title">
-                                        <h5><a href="#">Prevent 75% of visitors from google analytics</a></h5>
-                                    </div>
-                                    <div class="lpa-meta">
-                                        <a class="name" href="#">
-                                            Rachel Roth
-                                        </a>
-                                        <a class="date" href="#">
-                                            26 FEB 2020
-                                        </a>
-                                    </div>
-                                </div>
-                                <div class="lpa-right">
-                                    <a href="#">
-                                        <img src="https://www.bootdey.com/image/400x200/FFB6C1/000000" title="" alt="">
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="latest-post-aside media">
-                                <div class="lpa-left media-body">
-                                    <div class="lpa-title">
-                                        <h5><a href="#">Prevent 75% of visitors from google analytics</a></h5>
-                                    </div>
-                                    <div class="lpa-meta">
-                                        <a class="name" href="#">
-                                            Rachel Roth
-                                        </a>
-                                        <a class="date" href="#">
-                                            26 FEB 2020
-                                        </a>
-                                    </div>
-                                </div>
-                                <div class="lpa-right">
-                                    <a href="#">
-                                        <img src="https://www.bootdey.com/image/400x200/FFB6C1/000000" title="" alt="">
-                                    </a>
-                                </div>
-                            </div>
+                            <?php }
+                            } ?>
+
                         </div>
                     </div>
                     <!-- End Latest Post -->
                     <!-- widget Tags -->
                     <div class="widget widget-tags">
                         <div class="widget-title">
-                            <h3>Latest Tags</h3>
+                            <h3>กิจกรรมล่าสุด</h3>
                         </div>
                         <div class="widget-body">
-                            <div class="nav tag-cloud">
-                                <a href="#">Design</a>
-                                <a href="#">Development</a>
-                                <a href="#">Travel</a>
-                                <a href="#">Web Design</a>
-                                <a href="#">Marketing</a>
-                                <a href="#">Research</a>
-                                <a href="#">Managment</a>
-                            </div>
+                            <?php if (!empty($lastest_activities)) { ?>
+                                <?php foreach ($lastest_activities as $activity) {
+                                    $id = $activity['activity_id'];
+                                    $title = $activity['title'];
+                                    $image = explode(',', $activity['image'])[0];
+                                    $created_at = date('d-m-Y', strtotime($activity['created_at']));
+
+                                ?>
+                                    <div class="latest-post-aside media">
+                                        <div class="lpa-left media-body">
+                                            <div class="lpa-title">
+                                                <h5><a href="../activities/detail.php?id=<?php echo $id ?>"><?php echo $title ?></a></h5>
+                                            </div>
+                                            <div class="lpa-meta">
+                                                <a class="name" href="../activities/detail.php?id=<?php echo $id ?></a>">
+                                                    Rachel Roth
+                                                </a>
+                                                <a class="date" href="../activities/detail.php?id=<?php echo $id ?></a>">
+                                                    <?php echo thaiDateFormat($created_at) ?>
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="lpa-right">
+                                            <a href="#">
+                                                <img src="../../assets/images/activity/<?php echo $image ?>" title="" alt="">
+                                            </a>
+                                        </div>
+                                    </div>
+                            <?php }
+                            } ?>
+
                         </div>
                     </div>
                     <!-- End widget Tags -->
