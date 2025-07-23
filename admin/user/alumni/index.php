@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
     $pagination = new PaginationHelper($currentPage, $itemsPerPage, $totalItems);
 
     // ดึงข่าวตามเงื่อนไข
-    $alumni_list = $alumni->searchAndFilterAlumni($keyword, $education_level, $graduation_year,$start_date, $end_date, $pagination->getLimit(), $pagination->getOffset());
+    $alumni_list = $alumni->searchAndFilterAlumni($keyword, $education_level, $graduation_year, $start_date, $end_date, $pagination->getLimit(), $pagination->getOffset());
 } else {
     // นับจำนวนรายการทั้งหมด
     $totalItems = $alumni->getTotalCount();
@@ -137,7 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
                     <label class="form-label fw-bold">ระดับชั้นที่จบการศึกษา</label>
                     <select name="education_level" class="form-select">
                         <option selected value="">ทั้งหมด</option>
-                        <option <?php echo $education_level == 'ปวช.3' ? 'selected' : '' ?> value="ปวช.3">ปวช.3</option>    
+                        <option <?php echo $education_level == 'ปวช.3' ? 'selected' : '' ?> value="ปวช.3">ปวช.3</option>
                         <option <?php echo $education_level == 'ปวส.2' ? 'selected' : '' ?> value="ปวส.2">ปวส.2</option>
                     </select>
                 </div>
@@ -146,8 +146,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
                     <select name="graduation_year" class="form-select">
                         <option selected value="">ทั้งหมด</option>
                         <?php $year = 2540; ?>
-                        <?php for($i = $year ; $i <= date('Y') + 543;  $i++){ ?>
-                        <option <?php echo $graduation_year == $i ? 'selected' : '' ?> value="<?php echo $i ?>"><?php echo $i ?></option>    
+                        <?php for ($i = $year; $i <= date('Y') + 543; $i++) { ?>
+                            <option <?php echo $graduation_year == $i ? 'selected' : '' ?> value="<?php echo $i ?>"><?php echo $i ?></option>
                         <?php } ?>
                     </select>
                 </div>
@@ -216,6 +216,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
                                 $image = !empty($item['image']) ? $item['image'] : "";
                                 $created_at = date('d/m/Y H:i', strtotime($item['created_at']));
 
+                                $address = $item['address'];
+                                $facebook = $item['facebook'];
+                                $instagram = $item['instagram'];
+                                $tiktok = $item['tiktok'];
+                                $line = $item['line'];
+
                                 $isset_image = $image != '' ? '../../../assets/images/user/alumni/' . $image : '../../../assets/images/user/no-image-profile.jpg';
                         ?>
                                 <tr>
@@ -248,7 +254,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
                                                 '<?php echo htmlspecialchars($current_company, ENT_QUOTES); ?>',
                                                 '<?php echo htmlspecialchars($current_salary, ENT_QUOTES); ?>',
                                                 '<?php echo htmlspecialchars($created_at, ENT_QUOTES); ?>',
-                                                '<?php echo $isset_image ?>'
+                                                '<?php echo $isset_image ?>',
+                                                '<?php echo $address ?>',
+                                                '<?php echo $facebook ?>',
+                                                '<?php echo $instagram ?>',
+                                                '<?php echo $tiktok ?>',
+                                                '<?php echo $line ?>',
                                             )"
                                             data-bs-toggle="modal"
                                             data-bs-target="#modalManageData">
@@ -300,7 +311,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
                     <form id="editAlumniForm" enctype="multipart/form-data">
                         <input type="hidden" name="deleted_images" id="deletedImages" value="">
                         <input type="hidden" name="current_images" id="currentImages" value="">
-                        
+
 
                         <div class="row">
                             <div class="col-md-4 mx-auto text-center">
@@ -315,6 +326,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
                                 </small>
                             </div>
                             <div class="col-md-8">
+                                <div class="detail-card-header mb-2">
+                                    <i class="fas fa-user me-2"></i>ข้อมูลส่วนตัว
+                                </div>
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">รหัสผู้ใช้งาน</label>
@@ -358,6 +372,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
                                     </div>
                                 </div>
 
+                                <div class="mb-3">
+                                    <label class="form-label">ที่อยู่</label>
+                                    <textarea class="form-control" id="editAddress" name="address"></textarea>
+                                </div>
+
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">ปีที่จบการศึกษา</label>
@@ -372,6 +391,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
                                             <option value="ว่างงาน">ว่างงาน</option>
                                         </select>
                                     </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">สถานะ</label>
+                                    <select class="form-select" id="editStatus" name="status_register" required>
+                                        <option value="1">Approved</option>
+                                        <option value="2">Waiting for Approved</option>
+                                        <option value="0">Reject</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">วันที่เริ่มเป็นสมาขิก</label>
+                                    <input type="text" class="form-control" id="editDateRegister" disabled name="date_register" required>
+                                </div>
+
+                                <hr>
+
+                                <div class="detail-card-header mb-2">
+                                    <i class="fas fa-briefcase me-2"></i>ข้อมูลการทำงาน
                                 </div>
 
                                 <div class="row">
@@ -390,19 +429,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
                                     <input type="number" class="form-control" id="editCurrentSalary" name="current_salary" required>
                                 </div>
 
-                                <div class="mb-3">
-                                    <label class="form-label">สถานะ</label>
-                                    <select class="form-select" id="editStatus" name="status_register" required>
-                                        <option value="1">Approved</option>
-                                        <option value="2">Waiting for Approved</option>
-                                        <option value="0">Reject</option>
-                                    </select>
+                                <hr>
+
+                                <div class="detail-card-header mb-2">
+                                    <i class="fas fa-address-book me-2"></i>ข้อมูลการติดต่อ
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label">วันที่เริ่มเป็นสมาขิก</label>
-                                    <input type="text" class="form-control" id="editDateRegister" disabled name="date_register" required>
+                                    <label class="form-label">Facebook ลิงค์</label>
+                                    <input type="text" class="form-control" id="editFacebook" name="facebook" required>
                                 </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Instagram ลิงค์</label>
+                                    <input type="text" class="form-control" id="editInstagram" name="instagram" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Line ID ลิงค์</label>
+                                    <input type="text" class="form-control" id="editLine" name="line" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Tiktok ลิงค์</label>
+                                    <input type="text" class="form-control" id="editTiktok" name="tiktok" required>
+                                </div>
+
+
+
+
                             </div>
                         </div>
 
@@ -428,7 +483,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
     <script src="../../functions/update_data.js"></script>
     <script>
         function modalEditAlumni(id, student_code, first_name, last_name, email, phone, education_level, graduation_year, status_register, status_education, image,
-            current_job, current_company, current_salary, created_at, issetImage) {
+            current_job, current_company, current_salary, created_at, issetImage, address, facebook, instagram, tiktok, line) {
             // กำหนดค่าให้กับฟอร์ม Edit Modal
             document.getElementById('editAlumniId').value = id;
             document.getElementById('editStudentCode').value = student_code;
@@ -439,12 +494,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
             document.getElementById('editEducationLevel').value = education_level;
             document.getElementById('editGraduationYear').value = graduation_year;
             document.getElementById('editStatus').value = status_register;
-            document.getElementById('editStatusEducation').value = status_education == "ไม่มีข้อมูล" ? "" : "";
+            document.getElementById('editStatusEducation').value = status_education == "ไม่มีข้อมูล" ? "" : status_education;
             document.getElementById('imagePreview').src = issetImage;
             document.getElementById('editCurrentJob').value = current_job;
             document.getElementById('editCurrentCompany').value = current_company;
             document.getElementById('editCurrentSalary').value = current_salary;
             document.getElementById('editDateRegister').value = created_at;
+
+            document.getElementById('editAddress').value = address;
+            document.getElementById('editFacebook').value = facebook;
+            document.getElementById('editInstagram').value = instagram;
+            document.getElementById('editTiktok').value = tiktok;
+            document.getElementById('editLine').value = line;
 
             document.getElementById('currentImages').value = image;
         }
@@ -475,7 +536,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
                 };
                 reader.readAsDataURL(file);
 
-                if(currentImage.value != '../../../assets/images/user/no-image-profile.jpg'){
+                if (currentImage.value != '../../../assets/images/user/no-image-profile.jpg') {
                     deleteImage.value = currentImage.value
                 }
 
@@ -486,7 +547,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
         const currentImage = document.getElementById('currentImages'); // hidden input ที่เก็บชื่อรูปเดิม
 
         // ดักเหตุการณ์เมื่อ modal ถูกปิด
-        form.addEventListener('hide.bs.modal', function () {
+        form.addEventListener('hide.bs.modal', function() {
             // ล้างค่า input file
             input.value = "";
 

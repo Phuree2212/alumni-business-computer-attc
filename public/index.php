@@ -2,6 +2,7 @@
 require_once '../config/config.php';
 require_once '../classes/news.php';
 require_once '../classes/activities.php';
+require_once '../classes/gallery.php';
 require_once '../config/function.php';
 
 $db = new Database();
@@ -12,6 +13,10 @@ $activity = new Activities($conn);
 $news_list = $news->getAllNews(6, 0);
 $activity_list = $activity->getAllActivity(6, 0);
 
+//ดึงรูปภาพ gallery
+$gallery_class = new Gallery($news, $activity);
+$gallery = $gallery_class->getAllImages();
+
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -21,7 +26,7 @@ $activity_list = $activity->getAllActivity(6, 0);
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="../assets/css/bootstrap-icons.min.css" rel="stylesheet">
     <link href="../assets/css/style.css" rel="stylesheet">
-    
+
     <style>
         .section-title {
             color: var(--primary-blue);
@@ -89,7 +94,7 @@ $activity_list = $activity->getAllActivity(6, 0);
 
     <!-- แทนที่ section ที่มีรูปภาพแนะนำแผนกเดิม -->
     <section>
-        <div class="container mt-4">
+        <div class="container-xl mt-4">
             <div class="row">
                 <div>
                     <!-- Image Carousel -->
@@ -119,7 +124,7 @@ $activity_list = $activity->getAllActivity(6, 0);
                                     alt="โครงงานนักเรียน">
 
                             </div>
-                            
+
                         </div>
                         <button class="carousel-control-prev" type="button" data-bs-target="#departmentCarousel" data-bs-slide="prev">
                             <span class="carousel-control-prev-icon" aria-hidden="true"></span>
@@ -138,31 +143,13 @@ $activity_list = $activity->getAllActivity(6, 0);
 
     <!-- Activities & News -->
     <section class="py-5">
-        <div class="container">
+        <div class="container-xl">
             <div class="row">
-                <div class="col-lg-3 mb-4">
-                    <h2 class="section-title">เข้าสู่ระบบ</h2>
 
-                    <form class="gap-3">
-                        <div class="mb-1">
-                            <label for="exampleInputEmail1" class="form-label">ชื่อผู้ใช้/รหัสนักศึกษา</label>
-                            <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
-                        </div>
-                        <div class="mb-1">
-                            <label for="exampleInputPassword1" class="form-label">รหัสผ่าน</label>
-                            <input type="password" class="form-control" id="exampleInputPassword1">
-                        </div>
-                        <div class="mb-1 form-check">
-                            <input type="checkbox" class="form-check-input" id="exampleCheck1">
-                            <label class="form-check-label" for="exampleCheck1">จดจำการเข้าสูระบบ</label>
-                        </div>
-                        <a href="#" class="btn btn-primary w-100 mb-2">เข้าสู่ระบบ</a>
-                        <a href="register.php" class="btn btn-success w-100">ลงทะเบียน</a>
-                    </form>
 
-                </div>
+
                 <!-- News -->
-                <div class="col-lg-6 mb-4">
+                <div class="col-lg-8 mb-4">
                     <h2 class="section-title">ข่าวสาร/ประชาสัมพันธ์</h2>
                     <div class="row g-4">
 
@@ -199,44 +186,28 @@ $activity_list = $activity->getAllActivity(6, 0);
                 </div>
 
                 <!-- News -->
-                <div class="col-lg-3">
+                <div class="col-lg-4">
                     <h2 class="section-title">แกลเลอรี</h2>
-                    <div class="row gap-3">
-                        <div class="col-md-3">
-                            <img style="width: 70px; height: 70px;" src="https://www.freeiconspng.com/thumbs/no-image-icon/no-image-icon-6.png" alt="">
-                        </div>
-                        <div class="col-md-3">
-                            <img style="width: 70px; height: 70px;" src="https://www.freeiconspng.com/thumbs/no-image-icon/no-image-icon-6.png" alt="">
-                        </div>
-                        <div class="col-md-3">
-                            <img style="width: 70px; height: 70px;" src="https://www.freeiconspng.com/thumbs/no-image-icon/no-image-icon-6.png" alt="">
-                        </div>
-                        <div class="col-md-3">
-                            <img style="width: 70px; height: 70px;" src="https://www.freeiconspng.com/thumbs/no-image-icon/no-image-icon-6.png" alt="">
-                        </div>
-                        <div class="col-md-3">
-                            <img style="width: 70px; height: 70px;" src="https://www.freeiconspng.com/thumbs/no-image-icon/no-image-icon-6.png" alt="">
-                        </div>
-                        <div class="col-md-3">
-                            <img style="width: 70px; height: 70px;" src="https://www.freeiconspng.com/thumbs/no-image-icon/no-image-icon-6.png" alt="">
-                        </div>
-                        <div class="col-md-3">
-                            <img style="width: 70px; height: 70px;" src="https://www.freeiconspng.com/thumbs/no-image-icon/no-image-icon-6.png" alt="">
-                        </div>
-                        <div class="col-md-3">
-                            <img style="width: 70px; height: 70px;" src="https://www.freeiconspng.com/thumbs/no-image-icon/no-image-icon-6.png" alt="">
-                        </div>
-                        <div class="col-md-3">
-                            <img style="width: 70px; height: 70px;" src="https://www.freeiconspng.com/thumbs/no-image-icon/no-image-icon-6.png" alt="">
-                        </div>
+                    <div class="row g-3"> <!-- g-3 คือ gap -->
+                        <?php
+                        foreach ($gallery as $item) {
+                            $image_path = "../assets/images/{$item['type']}/{$item['image']}";
+                        ?>
+                            <div class="col-6 col-md-4"> <!-- 2 ช่องในมือถือ, 4 ช่องใน desktop -->
+                                <div class="card h-100">
+                                    <img src="<?php echo $image_path; ?>" class="card-img-top img-fluid" alt="...">
+                                </div>
+                            </div>
+                        <?php } ?>
                     </div>
 
                 </div>
+
     </section>
 
     <!-- Knowledge Articles -->
     <section class="py-5">
-        <div class="container">
+        <div class="container-xl">
             <h2 class="section-title text-center mb-5">กิจกรรม</h2>
             <div class="row g-4">
 

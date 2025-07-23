@@ -1,50 +1,35 @@
 <?php
 require_once '../../config/config.php';
+require_once '../../classes/alumni.php';
 
-// ตัวอย่างข้อมูลศิษย์เก่า (จริงๆ ควรดึงจากฐานข้อมูล)
-$alumni_id = $_GET['id'] ?? 1;
-$alumni = [
-    'id' => 1,
-    'name' => 'นายอัครเดช สมบูรณ์',
-    'student_id' => '66120001',
-    'level' => 'ปวส.',
-    'year' => '2567',
-    'major' => 'คอมพิวเตอร์ธุรกิจ',
-    'status' => 'กำลังศึกษา',
-    'email' => 'akkaradet@email.com',
-    'phone' => '081-234-5678',
-    'facebook' => 'akkaradet.s',
-    'line' => 'akkaradet123',
-    'instagram' => 'akk_sb',
-    'linkedin' => 'akkaradet-somboon',
-    'github' => 'akkaradet-dev',
-    'address' => '123 หมู่ 5 ตำบลวิเศษไชยชาญ อำเภอวิเศษไชยชาญ จังหวัดอ่างทอง 14110',
-    'birth_date' => '15 มีนาคม 2548',
-    'age' => 20,
-    'avatar' => 'https://bootdey.com/img/Content/avatar/avatar1.png',
-    'graduation_date' => 'มีนาคม 2568 (คาดการณ์)',
-    'gpa' => '3.65',
-    'skills' => ['PHP', 'JavaScript', 'MySQL', 'HTML/CSS', 'Bootstrap', 'React'],
-    'projects' => [
-        [
-            'name' => 'ระบบจัดการร้านค้าออนไลน์',
-            'description' => 'พัฒนาระบบจัดการสินค้าและการขายออนไลน์ด้วย PHP และ MySQL',
-            'tech' => 'PHP, MySQL, Bootstrap'
-        ],
-        [
-            'name' => 'แอปพลิเคชันบันทึกค่าใช้จ่าย',
-            'description' => 'แอปพลิเคชันสำหรับบันทึกและติดตามค่าใช้จ่ายรายวัน',
-            'tech' => 'React Native, Firebase'
-        ]
-    ],
-    'certificates' => [
-        'การพัฒนาเว็บไซต์ด้วย PHP',
-        'Microsoft Office Specialist',
-        'Google Analytics Individual Qualification'
-    ],
-    'interests' => ['Web Development', 'Mobile App Development', 'UI/UX Design', 'Digital Marketing'],
-    'goals' => 'ต้องการเป็น Full Stack Developer และสร้างบริษัทเทคโนโลยีของตัวเอง'
-];
+$db = new Database();
+$conn = $db->connect();
+$alumni = new Alumni($conn);
+
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id'])) {
+  $id = $_GET['id'];
+
+  $alumni_detail = $alumni->getAlumni($id);
+
+  $student_code = $alumni_detail['student_code'];
+  $fullname = $alumni_detail['first_name'] . ' ' . $alumni_detail['last_name'];
+  $image = $alumni_detail['image'];
+  $education_level = $alumni_detail['education_level'];
+  $graduation_year = $alumni_detail['graduation_year'];
+
+  $email = $alumni_detail['email'];
+  $phone = $alumni_detail['phone'];
+  $address = !empty($alumni_detail['address']) ? $alumni_detail['address'] : "ไม่มีข้อมูล";
+  $facebook = $alumni_detail['facebook'];
+  $instagram = $alumni_detail['instagram'];
+  $tiktok = $alumni_detail['tiktok'];
+  $line = $alumni_detail['line'];
+
+  $status_education = !empty($alumni_detail['status_education']) ? $alumni_detail['status_education'] : 'ไม่มีข้อมูล';
+} else {
+  header("Location : index.php");
+  exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -112,8 +97,8 @@ $alumni = [
 
   .contact-links {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
+    flex-direction: column;
+    gap: 10px;
   }
 
   .contact-link {
@@ -284,48 +269,29 @@ $alumni = [
 <body>
   <?php include '../../includes/navbar.php' ?>
 
-  <div class="container px-4 py-3">
-    <!-- Breadcrumb -->
-    <div class="breadcrumb-custom">
-      <div class="d-flex justify-content-between align-items-center">
-        <nav aria-label="breadcrumb">
-          <ol class="breadcrumb mb-0">
-            <li class="breadcrumb-item">
-              <a href="#" class="text-decoration-none">
-                <i class="fas fa-home"></i> หน้าแรก
-              </a>
-            </li>
-            <li class="breadcrumb-item">
-              <a href="#" class="text-decoration-none">รายชื่อศิษย์เก่า</a>
-            </li>
-            <li class="breadcrumb-item active" aria-current="page">
-              นายอัครเดช สมบูรณ์
-            </li>
-          </ol>
-        </nav>
-        <button onclick="history.back()" class="btn btn-back">
-          <i class="fas fa-arrow-left me-2"></i>กลับ
-        </button>
-      </div>
-    </div>
+  <div class="container-xxl py-3">
+
+    <button onclick="history.back()" class="btn btn-back mb-3">
+      <i class="fas fa-arrow-left me-2"></i>กลับ
+    </button>
 
     <div class="alumni-detail-container">
       <!-- Profile Header -->
       <div class="profile-header">
         <div class="row align-items-center">
           <div class="col-lg-3 col-md-4 text-center mb-3 mb-md-0">
-            <img src="https://bootdey.com/img/Content/avatar/avatar1.png" class="rounded-circle profile-avatar" alt="นายอัครเดช สมบูรณ์">
+            <img src="../../assets/images/user/alumni/<?php echo $image; ?>" class="rounded-circle profile-avatar" alt="<?php echo $fullname ?>">
           </div>
           <div class="col-lg-6 col-md-8">
-            <h2 class="mb-2">นายอัครเดช สมบูรณ์</h2>
+            <h2 class="mb-2"><?php echo $fullname ?></h2>
             <h5 class="mb-3 opacity-75">
-              ปวส. คอมพิวเตอร์ธุรกิจ | รหัสนักศึกษา: 66120001
+              ระดับชั้นที่จบการศึกษา : <?php $education_level ?> คอมพิวเตอร์ธุรกิจ | รหัสนักศึกษา: <?php echo $student_code ?>
             </h5>
             <div class="status-badge mb-3">
-              <i class="fas fa-graduation-cap me-2"></i>กำลังศึกษา
+              <i class="fas fa-graduation-cap me-2"></i>สถานะการศึกษา : <?php echo $status_education ?>
             </div>
             <p class="mb-0 opacity-75">
-              <i class="fas fa-calendar me-2"></i>ปีการศึกษา 2567
+              <i class="fas fa-calendar me-2"></i>ปีที่จบการศึกษา <?php echo $graduation_year ?>
             </p>
           </div>
           <div class="col-lg-3 text-center">
@@ -348,11 +314,11 @@ $alumni = [
             <div class="detail-card-body">
               <div class="info-row">
                 <span class="info-label">ชื่อ-นามสกุล</span>
-                <span class="info-value">นายอัครเดช สมบูรณ์</span>
+                <span class="info-value"><?php echo $fullname ?></span>
               </div>
               <div class="info-row">
                 <span class="info-label">รหัสนักศึกษา</span>
-                <span class="info-value">66120001</span>
+                <span class="info-value"><?php echo $student_code ?></span>
               </div>
               <div class="info-row">
                 <span class="info-label">วันเกิด</span>
@@ -360,15 +326,11 @@ $alumni = [
               </div>
               <div class="info-row">
                 <span class="info-label">ระดับการศึกษา</span>
-                <span class="info-value">ปวส. คอมพิวเตอร์ธุรกิจ</span>
+                <span class="info-value"><?php echo $education_level ?></span>
               </div>
               <div class="info-row">
                 <span class="info-label">ปีการศึกษา</span>
-                <span class="info-value">2567</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">วันที่จบการศึกษา</span>
-                <span class="info-value">มีนาคม 2568 (คาดการณ์)</span>
+                <span class="info-value"><?php echo $graduation_year ?></span>
               </div>
               <div class="info-row">
                 <span class="info-label">เกรดเฉลี่ย</span>
@@ -376,7 +338,7 @@ $alumni = [
               </div>
               <div class="info-row">
                 <span class="info-label">ที่อยู่</span>
-                <span class="info-value">123 หมู่ 5 ตำบลวิเศษไชยชาญ อำเภอวิเศษไชยชาญ จังหวัดอ่างทอง 14110</span>
+                <span class="info-value"><?php echo $address ?></span>
               </div>
             </div>
           </div>
@@ -398,31 +360,7 @@ $alumni = [
             </div>
           </div>
 
-          <!-- Projects -->
-          <div class="detail-card">
-            <div class="detail-card-header">
-              <i class="fas fa-project-diagram me-2"></i>ผลงาน/โครงการ
-            </div>
-            <div class="detail-card-body">
-              <div class="project-card">
-                <div class="project-title">ระบบจัดการร้านค้าออนไลน์</div>
-                <p class="mb-2 text-muted">พัฒนาระบบจัดการสินค้าและการขายออนไลน์ด้วย PHP และ MySQL พร้อมระบบจัดการคำสั่งซื้อและรายงานยอดขาย</p>
-                <span class="project-tech">PHP, MySQL, Bootstrap, JavaScript</span>
-              </div>
-              <div class="project-card">
-                <div class="project-title">แอปพลิเคชันบันทึกค่าใช้จ่าย</div>
-                <p class="mb-2 text-muted">แอปพลิเคชันสำหรับบันทึกและติดตามค่าใช้จ่ายรายวัน พร้อมกราฟแสดงสถิติการใช้จ่าย</p>
-                <span class="project-tech">React Native, Firebase, Chart.js</span>
-              </div>
-              <div class="project-card">
-                <div class="project-title">เว็บไซต์พอร์ตโฟลิโอส่วนตัว</div>
-                <p class="mb-2 text-muted">เว็บไซต์แสดงผลงานและประวัติส่วนตัว พร้อมระบบ Contact Form และ Blog</p>
-                <span class="project-tech">HTML, CSS, JavaScript, PHP</span>
-              </div>
-            </div>
-          </div>
 
-          
         </div>
 
         <!-- Right Column -->
@@ -430,31 +368,36 @@ $alumni = [
           <!-- Contact Information -->
           <div class="detail-card">
             <div class="detail-card-header">
-              <i class="fas fa-address-book me-2"></i>ช่องทางติดต่อ
+              <i class="fas fa-address-book me-2"></i>ช่องทางการติดต่อ
             </div>
             <div class="detail-card-body">
               <div class="contact-links">
-                <a href="mailto:akkaradet@email.com" class="contact-link">
-                  <i class="fas fa-envelope"></i>อีเมล
+                <a href="mailto:<?php echo $email ?>" class="contact-link">
+                  <i class="fas fa-envelope"></i>อีเมลล์ : <?php echo $email ?>
                 </a>
-                <a href="tel:0812345678" class="contact-link">
-                  <i class="fas fa-phone"></i>โทรศัพท์
+                <a href="tel:<?php echo $phone ?>" class="contact-link">
+                  <i class="fas fa-phone"></i>โทรศัพท์ : <?php echo $phone ?>
                 </a>
-                <a href="#" class="contact-link">
-                  <i class="fab fa-facebook"></i>Facebook
-                </a>
-                <a href="#" class="contact-link">
+                <?php if (!empty($facebook)) { ?>
+                  <a href="<?php echo $facebook ?>" target="_blank" class="contact-link">
+                    <i class="fab fa-facebook"></i>Facebook
+                  </a>
+                <?php } ?>
+                <?php if (!empty($line)) { ?>
+                <a href="<?php echo $line ?>" class="contact-link">
                   <i class="fab fa-line"></i>Line
                 </a>
-                <a href="#" class="contact-link">
+                <?php } ?>
+                <?php if (!empty($instagram)) { ?>
+                <a href="<?php echo $instagram ?>" class="contact-link">
                   <i class="fab fa-instagram"></i>Instagram
                 </a>
-                <a href="#" class="contact-link">
-                  <i class="fab fa-linkedin"></i>LinkedIn
+                <?php } ?>
+                <?php if (!empty($tiktok)) { ?>
+                <a href="<?php echo $tiktok ?>" class="contact-link">
+                  <i class="fa-brands fa-tiktok"></i>Tiktok
                 </a>
-                <a href="#" class="contact-link">
-                  <i class="fab fa-github"></i>GitHub
-                </a>
+                <?php } ?>
               </div>
             </div>
           </div>
@@ -480,8 +423,9 @@ $alumni = [
             </div>
           </div>
 
-          
-          
+
+
+
         </div>
       </div>
     </div>
@@ -489,8 +433,8 @@ $alumni = [
 
   <?php include '../../includes/footer.php' ?>
 
-  <script src="../../assets/js/bootstrap.bundle.min.js"></script>
-  
-  </body>
+  <script src="../../assets/js/bootstrap.min.js"></script>
+
+</body>
 
 </html>

@@ -70,7 +70,18 @@ class Alumni extends User
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function editAlumni($id, $student_code, $first_name, $last_name, $email, $phone, $education_level, $graduation_year, $status_register, $current_job, $current_company, $current_salary, $image, $status_education)
+    public function getAlumni($id)
+    {
+        $stmt = $this->conn->prepare("SELECT * FROM {$this->table} WHERE user_type = 'alumni' AND status_register = 1 AND user_id = :id");
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+
+    public function editAlumni($id, $student_code, $first_name, $last_name, $email, $phone, $education_level, $graduation_year, $status_register, $current_job, $current_company, $current_salary, $image, $status_education
+                               , $address, $facebook, $instagram, $tiktok, $line)
     {
         try{
         $result_check_duplicate = $this->checkDuplicate($id,$student_code, $email, $phone);
@@ -80,7 +91,7 @@ class Alumni extends User
 
         $stmt = $this->conn->prepare("UPDATE {$this->table} SET student_code = :student_code, first_name = :first_name, last_name = :last_name, email = :email, phone = :phone, education_level = :education_level, 
                                       graduation_year = :graduation_year, status_register = :status_register, current_job = :current_job, current_company = :current_company, current_salary = :current_salary,
-                                      image = :image, status_education = :status_education
+                                      image = :image, status_education = :status_education, address = :address, facebook = :facebook, instagram = :instagram, tiktok = :tiktok, line = :line
                                       WHERE user_id = :id");
 
         $stmt->bindParam(':id', $id);
@@ -97,6 +108,11 @@ class Alumni extends User
         $stmt->bindParam(':current_salary', $current_salary, PDO::PARAM_INT);
         $stmt->bindParam(':image', $image);
         $stmt->bindParam(':status_education', $status_education);
+        $stmt->bindParam(':address', $address);
+        $stmt->bindParam(':facebook', $facebook);
+        $stmt->bindParam(':instagram', $instagram);
+        $stmt->bindParam(':tiktok', $tiktok);
+        $stmt->bindParam(':line', $line);
         
 
         $result = $stmt->execute();

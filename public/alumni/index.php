@@ -1,5 +1,50 @@
 <?php
 require_once '../../config/config.php';
+require_once '../../classes/alumni.php';
+require_once '../../classes/pagination_helper.php';
+
+$db = new Database();
+$conn = $db->connect();
+$alumni = new Alumni($conn);
+
+//$alumni_list = $alumni->getAllAlumni(100, 0);
+
+// ตั้งค่าพื้นฐาน
+$currentPage   = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$itemsPerPage  = 10;
+
+// รับค่าการค้นหา
+$keyword    = trim($_GET['keyword'] ?? '');
+$education_level = $_GET['education_level'] ?? '';
+$graduation_year = $_GET['graduation_year'] ?? '';
+$start_date = $_GET['start_date'] ?? '';
+$end_date   = $_GET['end_date'] ?? '';
+
+// ถ้ามีการกรองข้อมูล
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($education_level) || !empty($graduation_year) || !empty($start_date) || !empty($end_date))) {
+
+  // นับจำนวนรายการที่ตรงกับเงื่อนไขการค้นหา
+  $totalItems = $alumni->getSearchAndFilterCount($keyword, $education_level, $graduation_year, $start_date, $end_date);
+
+  // สร้าง pagination
+  $pagination = new PaginationHelper($currentPage, $itemsPerPage, $totalItems);
+
+  // ดึงข่าวตามเงื่อนไข
+  $alumni_list = $alumni->searchAndFilterAlumni($keyword, $education_level, $graduation_year, $start_date, $end_date, $pagination->getLimit(), $pagination->getOffset());
+} else {
+  // นับจำนวนรายการทั้งหมด
+  $totalItems = $alumni->getTotalCount();
+
+  // สร้าง pagination
+  $pagination = new PaginationHelper($currentPage, $itemsPerPage, $totalItems);
+
+  // ดึงข่าวทั้งหมด
+  $alumni_list = $alumni->getAllAlumni(
+    $pagination->getLimit(),
+    $pagination->getOffset()
+  );
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -214,7 +259,7 @@ require_once '../../config/config.php';
 <body>
   <?php include '../../includes/navbar.php' ?>
 
-  <div class="container px-4 py-3">
+  <div class="container-xxl py-3">
     <div class="row alumni-container">
       <!-- Sidebar -->
       <div class="col-lg-3 col-md-4">
@@ -230,7 +275,7 @@ require_once '../../config/config.php';
             <div class="row g-2 mb-4">
               <div class="col-12">
                 <div class="stats-card">
-                  <div class="stats-number">1,247</div>
+                  <div class="stats-number"><?php echo $totalItems ?></div>
                   <small class="text-muted">สมาขิกศิษย์เก่า</small>
                 </div>
               </div>
@@ -238,16 +283,16 @@ require_once '../../config/config.php';
 
             <!-- Navigation Menu -->
             <nav class="nav nav-pills flex-column">
-              <a href="javascript:void(0)" class="nav-link active" onclick="filterAlumni('all')">
+              <a href="javascript:void(0)" class="nav-link active">
                 <i class="fas fa-list me-2"></i>ทั้งหมด
               </a>
-              <a href="javascript:void(0)" class="nav-link" onclick="filterAlumni('certificate')">
+              <a href="javascript:void(0)" class="nav-link">
                 <i class="fas fa-certificate me-2"></i>ปวช.
               </a>
-              <a href="javascript:void(0)" class="nav-link" onclick="filterAlumni('diploma')">
+              <a href="javascript:void(0)" class="nav-link">
                 <i class="fas fa-graduation-cap me-2"></i>ปวส.
               </a>
-              <a href="javascript:void(0)" class="nav-link" onclick="filterAlumni('employed')">
+              <a href="javascript:void(0)" class="nav-link">
                 <i class="fas fa-briefcase me-2"></i>ทำงานแล้ว
               </a>
             </nav>
@@ -267,22 +312,22 @@ require_once '../../config/config.php';
               <div id="collapseFilter" class="accordion-collapse collapse show" data-bs-parent="#sidebarAccordion">
                 <div class="accordion-body p-2">
                   <nav class="nav nav-pills flex-column">
-                    <a href="javascript:void(0)" class="nav-link active" onclick="filterAlumni('all')">
+                    <a href="javascript:void(0)" class="nav-link active">
                       <i class="fas fa-list me-2"></i>ทั้งหมด
                     </a>
-                    <a href="javascript:void(0)" class="nav-link" onclick="filterAlumni('recent')">
+                    <a href="javascript:void(0)" class="nav-link">
                       <i class="fas fa-star me-2"></i>รุ่นใหม่ล่าสุด
                     </a>
-                    <a href="javascript:void(0)" class="nav-link" onclick="filterAlumni('senior')">
+                    <a href="javascript:void(0)" class="nav-link">
                       <i class="fas fa-crown me-2"></i>รุ่นอาวุโส
                     </a>
-                    <a href="javascript:void(0)" class="nav-link" onclick="filterAlumni('certificate')">
+                    <a href="javascript:void(0)" class="nav-link">
                       <i class="fas fa-certificate me-2"></i>ปวช.
                     </a>
-                    <a href="javascript:void(0)" class="nav-link" onclick="filterAlumni('diploma')">
+                    <a href="javascript:void(0)" class="nav-link">
                       <i class="fas fa-graduation-cap me-2"></i>ปวส.
                     </a>
-                    <a href="javascript:void(0)" class="nav-link" onclick="filterAlumni('employed')">
+                    <a href="javascript:void(0)" class="nav-link">
                       <i class="fas fa-briefcase me-2"></i>ทำงานแล้ว
                     </a>
                   </nav>
@@ -301,43 +346,44 @@ require_once '../../config/config.php';
             <div class="text-center mb-3">
               <h2 class="mb-2">
                 <i class="fas fa-search me-2"></i>
-                รวมสมาขิกศิษย์เก่า
+                รวมสมาชิกศิษย์เก่า
               </h2>
               <p class="mb-0 opacity-75">แผนกวิชาคอมพิวเตอร์ธุรกิจ วิทยาลัยเทคนนิคอ่างทอง</p>
             </div>
 
             <div class="search-card">
-              <div class="row g-3">
-                <div class="col-md-4">
-                  <label class="form-label text-dark">ชื่อ-นามสกุล</label>
-                  <input type="text" class="form-control" id="searchName" placeholder="ค้นหาชื่อ...">
+              <form action="index.php" method="get">
+                <div class="row g-3">
+                  <div class="col-md-4">
+                    <label class="form-label text-dark">ชื่อ-นามสกุล</label>
+                    <input type="text" name="keyword" value="<?php echo htmlspecialchars($keyword ?? ''); ?>" class="form-control" id="searchName" placeholder="ค้นหาชื่อ...">
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label text-dark">ปีที่จบการศึกษา</label>
+                    <select name="graduation_year" class="form-select">
+                        <option selected value="">ทั้งหมด</option>
+                        <?php $year = 2540; ?>
+                        <?php for($i = $year ; $i <= date('Y') + 543;  $i++){ ?>
+                        <option <?php echo $graduation_year == $i ? 'selected' : '' ?> value="<?php echo $i ?>"><?php echo $i ?></option>    
+                        <?php } ?>
+                    </select>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label text-dark">ระดับชั้นที่จบการศึกษา</label>
+                    <select class="form-select" name="education_level" id="searchLevel">
+                      <option selected value="">ทั้งหมด</option>
+                        <option <?php echo $education_level == 'ปวช.3' ? 'selected' : '' ?> value="ปวช.3">ปวช.3</option>    
+                        <option <?php echo $education_level == 'ปวส.2' ? 'selected' : '' ?> value="ปวส.2">ปวส.2</option>
+                    </select>
+                  </div>
+                  <div class="col-md-2">
+                    <label class="form-label text-dark">&nbsp;</label>
+                    <button class="btn btn-primary w-100" type="submit">
+                      <i class="fas fa-search"></i>
+                    </button>
+                  </div>
                 </div>
-                <div class="col-md-3">
-                  <label class="form-label text-dark">ปีการศึกษา</label>
-                  <select class="form-select" id="searchYear">
-                    <option value="">ทั้งหมด</option>
-                    <option value="2567">2567</option>
-                    <option value="2566">2566</option>
-                    <option value="2565">2565</option>
-                    <option value="2564">2564</option>
-                    <option value="2563">2563</option>
-                  </select>
-                </div>
-                <div class="col-md-3">
-                  <label class="form-label text-dark">ระดับชั้น</label>
-                  <select class="form-select" id="searchLevel">
-                    <option value="">ทั้งหมด</option>
-                    <option value="ปวช.">ปวช.</option>
-                    <option value="ปวส.">ปวส.</option>
-                  </select>
-                </div>
-                <div class="col-md-2">
-                  <label class="form-label text-dark">&nbsp;</label>
-                  <button class="btn btn-primary w-100" onclick="searchAlumni()">
-                    <i class="fas fa-search"></i>
-                  </button>
-                </div>
-              </div>
+              </form>
             </div>
           </div>
 
@@ -355,224 +401,65 @@ require_once '../../config/config.php';
                   </select>
                 </div>
               </div>
-              <div class="col-md-6">
-                <div class="d-flex justify-content-md-end align-items-center">
-                  <span class="me-2 text-muted">แสดง:</span>
-                  <div class="btn-group btn-group-sm" role="group">
-                    <button type="button" class="btn btn-outline-primary active" onclick="setView('grid')">
-                      <i class="fas fa-th"></i>
-                    </button>
-                    <button type="button" class="btn btn-outline-primary" onclick="setView('list')">
-                      <i class="fas fa-list"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
+
             </div>
           </div>
 
           <!-- Alumni Grid -->
           <div id="alumniGrid" class="row g-4">
             <!-- Alumni Card 1 -->
-            <div class="col-lg-4 col-md-6 alumni-item" data-year="2567" data-level="ปวส." data-name="นายอัครเดช สมบูรณ์">
-              <div class="card alumni-card h-100 position-relative">
-                <div class="year-badge">2567</div>
-                <div class="card-body text-center">
-                  <img src="https://bootdey.com/img/Content/avatar/avatar1.png" class="rounded-circle alumni-avatar mx-auto mb-3" alt="Alumni">
-                  <div class="alumni-info">
-                    <h5>นายอัครเดช สมบูรณ์</h5>
-                    <p class="text-muted mb-2">ปวส.3 คอมพิวเตอร์ธุรกิจ</p>
-                    <span class="alumni-badge">กำลังศึกษา</span>
-                    <div class="alumni-contact">
-                      <a href="mailto:akkaradet@email.com" class="contact-btn">
-                        <i class="fas fa-envelope"></i>
-                      </a>
-                      <a href="tel:0812345678" class="contact-btn">
-                        <i class="fas fa-phone"></i>
-                      </a>
-                      <a href="#" class="contact-btn">
-                        <i class="fab fa-facebook"></i>
-                      </a>
-                      <a href="#" class="contact-btn">
-                        <i class="fab fa-line"></i>
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <?php if (!empty($alumni_list)) { ?>
+              <?php foreach ($alumni_list as $item) {
+                $id = $item['user_id'];
+                $fullname = $item['first_name'] . ' ' . $item['last_name'];
+                $image = $item['image'];
+                $education_level = $item['education_level'];
+                $graduation_year = $item['graduation_year'];
+                $status_education = !empty($item['status_education']) ? $item['status_education'] : 'ไม่มีข้อมูล';
 
-            <!-- Alumni Card 2 -->
-            <div class="col-lg-4 col-md-6 alumni-item" data-year="2566" data-level="ปวส." data-name="นางสาวสุพิชญา แสงทอง">
-              <div class="card alumni-card h-100 position-relative">
-                <div class="year-badge">2566</div>
-                <div class="card-body text-center">
-                  <img src="https://bootdey.com/img/Content/avatar/avatar2.png" class="rounded-circle alumni-avatar mx-auto mb-3" alt="Alumni">
-                  <div class="alumni-info">
-                    <h5>นางสาวสุพิชญา แสงทอง</h5>
-                    <p class="text-muted mb-2">ปวส. คอมพิวเตอร์ธุรกิจ</p>
-                    <span class="alumni-badge">ทำงานแล้ว</span>
-                    <p class="mt-2 mb-2 text-muted small">Web Developer @ ABC Company</p>
-                    <div class="alumni-contact">
-                      <a href="mailto:supitchaya@email.com" class="contact-btn">
-                        <i class="fas fa-envelope"></i>
-                      </a>
-                      <a href="tel:0823456789" class="contact-btn">
-                        <i class="fas fa-phone"></i>
-                      </a>
-                      <a href="#" class="contact-btn">
-                        <i class="fab fa-facebook"></i>
-                      </a>
-                      <a href="#" class="contact-btn">
-                        <i class="fab fa-linkedin"></i>
-                      </a>
+              ?>
+                <div class="col-lg-4 col-md-6 alumni-item">
+                  <a class="nav-link" href="detail.php?id=<?php echo $id ?>">
+                    <div class="card alumni-card h-100 position-relative">
+                      <div class="year-badge"><?php echo $graduation_year ?></div>
+                      <div class="card-body text-center">
+                        <img src="../../assets/images/user/alumni/<?php echo $image ?>" class="rounded-circle alumni-avatar mx-auto mb-3" alt="Alumni">
+                        <div class="alumni-info">
+                          <h5><?php echo $fullname ?></h5>
+                          <p class="text-muted mb-2"><?php echo $education_level ?> คอมพิวเตอร์ธุรกิจ</p>
+                          <span class="alumni-badge"><?php echo $status_education ?></span>
+                          
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  </a>
                 </div>
-              </div>
-            </div>
+            <?php }
+            } ?>
 
-            <!-- Alumni Card 3 -->
-            <div class="col-lg-4 col-md-6 alumni-item" data-year="2565" data-level="ปวช." data-name="นายธนากร เจริญสุข">
-              <div class="card alumni-card h-100 position-relative">
-                <div class="year-badge">2565</div>
-                <div class="card-body text-center">
-                  <img src="https://bootdey.com/img/Content/avatar/avatar3.png" class="rounded-circle alumni-avatar mx-auto mb-3" alt="Alumni">
-                  <div class="alumni-info">
-                    <h5>นายธนากร เจริญสุข</h5>
-                    <p class="text-muted mb-2">ปวช. คอมพิวเตอร์ธุรกิจ</p>
-                    <span class="alumni-badge">ทำงานแล้ว</span>
-                    <p class="mt-2 mb-2 text-muted small">IT Support @ XYZ Ltd.</p>
-                    <div class="alumni-contact">
-                      <a href="mailto:thanakorn@email.com" class="contact-btn">
-                        <i class="fas fa-envelope"></i>
-                      </a>
-                      <a href="tel:0834567890" class="contact-btn">
-                        <i class="fas fa-phone"></i>
-                      </a>
-                      <a href="#" class="contact-btn">
-                        <i class="fab fa-facebook"></i>
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            <!-- Alumni Card 4 -->
-            <div class="col-lg-4 col-md-6 alumni-item" data-year="2566" data-level="ปวช." data-name="นางสาวพิมพ์ใจ รักดี">
-              <div class="card alumni-card h-100 position-relative">
-                <div class="year-badge">2566</div>
-                <div class="card-body text-center">
-                  <img src="https://bootdey.com/img/Content/avatar/avatar4.png" class="rounded-circle alumni-avatar mx-auto mb-3" alt="Alumni">
-                  <div class="alumni-info">
-                    <h5>นางสาวพิมพ์ใจ รักดี</h5>
-                    <p class="text-muted mb-2">ปวช. คอมพิวเตอร์ธุรกิจ</p>
-                    <span class="alumni-badge">ศึกษาต่อ</span>
-                    <p class="mt-2 mb-2 text-muted small">ปวส. มหาวิทยาลัยเทคโนโลยี</p>
-                    <div class="alumni-contact">
-                      <a href="mailto:pimjai@email.com" class="contact-btn">
-                        <i class="fas fa-envelope"></i>
-                      </a>
-                      <a href="tel:0845678901" class="contact-btn">
-                        <i class="fas fa-phone"></i>
-                      </a>
-                      <a href="#" class="contact-btn">
-                        <i class="fab fa-instagram"></i>
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            <!-- Alumni Card 5 -->
-            <div class="col-lg-4 col-md-6 alumni-item" data-year="2564" data-level="ปวส." data-name="นายณัฐพงษ์ สว่างใส">
-              <div class="card alumni-card h-100 position-relative">
-                <div class="year-badge">2564</div>
-                <div class="card-body text-center">
-                  <img src="https://bootdey.com/img/Content/avatar/avatar5.png" class="rounded-circle alumni-avatar mx-auto mb-3" alt="Alumni">
-                  <div class="alumni-info">
-                    <h5>นายณัฐพงษ์ สว่างใส</h5>
-                    <p class="text-muted mb-2">ปวส. คอมพิวเตอร์ธุรกิจ</p>
-                    <span class="alumni-badge">ทำงานแล้ว</span>
-                    <p class="mt-2 mb-2 text-muted small">Software Engineer @ Tech Corp</p>
-                    <div class="alumni-contact">
-                      <a href="mailto:nuttapong@email.com" class="contact-btn">
-                        <i class="fas fa-envelope"></i>
-                      </a>
-                      <a href="tel:0856789012" class="contact-btn">
-                        <i class="fas fa-phone"></i>
-                      </a>
-                      <a href="#" class="contact-btn">
-                        <i class="fab fa-github"></i>
-                      </a>
-                      <a href="#" class="contact-btn">
-                        <i class="fab fa-linkedin"></i>
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <!-- Pagination -->
+            <div class="pagination-wrapper">
+              <div class="row align-items-center">
+                <?php
 
-            <!-- Alumni Card 6 -->
-            <div class="col-lg-4 col-md-6 alumni-item" data-year="2563" data-level="ปวช." data-name="นางสาวกัญญา มีสุข">
-              <div class="card alumni-card h-100 position-relative">
-                <div class="year-badge">2563</div>
-                <div class="card-body text-center">
-                  <img src="https://bootdey.com/img/Content/avatar/avatar6.png" class="rounded-circle alumni-avatar mx-auto mb-3" alt="Alumni">
-                  <div class="alumni-info">
-                    <h5>นางสาวกัญญา มีสุข</h5>
-                    <p class="text-muted mb-2">ปวช. คอมพิวเตอร์ธุรกิจ</p>
-                    <span class="alumni-badge">ประกอบธุรกิจ</span>
-                    <p class="mt-2 mb-2 text-muted small">เจ้าของร้าน Online Shop</p>
-                    <div class="alumni-contact">
-                      <a href="mailto:kanya@email.com" class="contact-btn">
-                        <i class="fas fa-envelope"></i>
-                      </a>
-                      <a href="tel:0867890123" class="contact-btn">
-                        <i class="fas fa-phone"></i>
-                      </a>
-                      <a href="#" class="contact-btn">
-                        <i class="fab fa-facebook"></i>
-                      </a>
-                      <a href="#" class="contact-btn">
-                        <i class="fab fa-instagram"></i>
-                      </a>
-                    </div>
-                  </div>
-                </div>
+                echo $pagination->renderBootstrap();
+
+                ?>
               </div>
             </div>
           </div>
 
-          <!-- Pagination -->
-          <div class="d-flex justify-content-center mt-5">
-            <nav aria-label="Alumni pagination">
-              <ul class="pagination">
-                <li class="page-item disabled">
-                  <span class="page-link"><i class="fas fa-chevron-left"></i></span>
-                </li>
-                <li class="page-item"><a class="page-link" href="javascript:void(0)">1</a></li>
-                <li class="page-item active"><span class="page-link">2</span></li>
-                <li class="page-item"><a class="page-link" href="javascript:void(0)">3</a></li>
-                <li class="page-item"><a class="page-link" href="javascript:void(0)">4</a></li>
-                <li class="page-item">
-                  <a class="page-link" href="javascript:void(0)"><i class="fas fa-chevron-right"></i></a>
-                </li>
-              </ul>
-            </nav>
-          </div>
         </div>
       </div>
     </div>
   </div>
-
+  </div>
 
   <?php include '../../includes/footer.php' ?>
 
-  <script src="../../assets/js/bootstrap.bundle.min.js"></script>
+  <script src="../../assets/js/bootstrap.min.js"></script>
 
 
 </body>

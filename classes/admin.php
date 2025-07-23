@@ -125,7 +125,7 @@ class Admin
 
                     $_SESSION['user'] = ['id' => $id,
                                          'username' => $username,
-                                         'role' => $role == 'admin' ? USER_TYPE_ADMIN : USER_TYPE_TEACHER,
+                                         'user_type' => $role == 'admin' ? USER_TYPE_ADMIN : USER_TYPE_TEACHER,
                                          'fullname' => $first_name . ' ' . $last_name,
                                          'image' => $image,
                                          'position' => $position];

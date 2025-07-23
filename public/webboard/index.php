@@ -13,9 +13,6 @@ require_once '../../config/config.php';
 </head>
 
 <style>
-  .forum-container {
-    min-height: calc(100vh - 3.5rem);
-  }
 
   .sidebar-nav {
     background-color: #fff;
@@ -26,7 +23,7 @@ require_once '../../config/config.php';
 
   .main-content {
     background-color: #f8f9fa;
-    min-height: calc(100vh - 3.5rem);
+
   }
 
   .forum-header {
@@ -115,42 +112,6 @@ require_once '../../config/config.php';
     box-shadow: 0 4px 8px rgba(70, 123, 203, 0.4);
   }
 
-  /* Responsive adjustments */
-  @media (max-width: 767.98px) {
-    .main-content {
-      padding: 1rem;
-    }
-
-    .forum-header {
-      padding: 0.75rem 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .sidebar-nav {
-      padding: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .forum-stats {
-      gap: 0.5rem;
-      font-size: 0.8125rem;
-    }
-
-    .forum-avatar {
-      width: 40px;
-      height: 40px;
-    }
-  }
-
-  @media (max-width: 575.98px) {
-    .forum-card .card-body {
-      padding: 1rem;
-    }
-
-    .forum-stats span:first-child {
-      display: none !important;
-    }
-  }
 
   /* Accordion styles for responsive sidebar */
   .accordion-button {
@@ -250,8 +211,8 @@ require_once '../../config/config.php';
 <body>
   <?php include '../../includes/navbar.php' ?>
 
-  <div class="container px-4">
-    <div class="row forum-container p-3">
+  <div class="container-xxl py-4">
+    <div class="row">
       <!-- Sidebar -->
       <div class="col-lg-3 col-md-4">
         <!-- Desktop Sidebar -->

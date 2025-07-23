@@ -25,6 +25,12 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
     $current_company = $_POST['current_company'];
     $current_salary = $_POST['current_salary'];  
     
+    $address = $_POST['address'];
+    $facebook = $_POST['facebook'];
+    $instagram = $_POST['instagram'];
+    $tiktok = $_POST['tiktok'];
+    $line = $_POST['line'];
+
     $image = $_FILES['image'];
     $current_images = $_POST['current_images'];
     $deleted_images = $_POST['deleted_images'];
@@ -53,7 +59,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 
 
     $result = $alumni->editAlumni($id, $student_code, $first_name, $last_name, $email, $phone, $education_level, 
-            $graduation_year, $status_register, $current_job, $current_company, $current_salary, $new_image_files, $status_education);
+            $graduation_year, $status_register, $current_job, $current_company, $current_salary, $new_image_files, $status_education,
+                                $address, $facebook, $instagram, $tiktok, $line);
 
     echo json_encode($result);
     

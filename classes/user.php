@@ -9,6 +9,44 @@ class User
         $this->conn = $db;
     }
 
+    public function checkStatusRegisterUser($data)
+    {
+        $sql = "SELECT status_register FROM {$this->table} WHERE";
+        $data_explode = explode(" ", $data);
+        if(count($data_explode) > 1){
+            $first_name = $data_explode[0];
+            $last_name = $data_explode[1];
+            $sql .= " first_name = :first_name AND last_name = :last_name";
+            
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bindParam(':first_name', $first_name);
+            $stmt->bindParam(':last_name', $last_name);
+        }else{
+            $student_code = $data;
+            $sql .= " student_code = :student_code";
+
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bindParam(':student_code', $data);
+        }
+
+        $stmt->execute();
+        $user = $stmt->fetchColumn();
+        
+        if ($user > 0) {
+            if ($user == 0) {
+                return ['result' => false, 'message' => 'สถานะการลงทะเบียนของท่าน ไม่ได้รับการอณุญาติให้ใช้งาน หากมีข้อสงสัยกรุณาติดต่อเจ้าหน้าที่ที่เกี่ยวข้อง'];
+            }
+            if ($user == 1) {
+                return ['result' => true, 'message' => 'สถานะการลงทะเบียนของท่าน ได้รับการอณุญาติให้ใช้งาน ท่านสามารถเข้าสู่ระบบได้'];
+            }
+            if ($user == 2) {
+                return ['result' => false, 'message' => 'สถานะการลงทะเบียนของท่าน อยู่ในระหว่างการตรวจสอบ หากคำขอของท่านยังไม่ได้รับการอณุญาติ กรุณาติดต่อเจ้าหน้าที่ที่เกี่ยวข้อง'];
+            }
+        }else{
+            return ['result' => false, 'message' => 'ไม่พบ รหัสนักศึกษา หรือ ชื่อ นามสกุล ของท่านที่ลงทะเบียนไว้ในระบบ'];
+        }
+    }
+
     // ตรวจสอบว่าอีเมลมีอยู่แล้วหรือยัง
     public function checkDuplicateRegister($student_code = '', $email = '', $phone = '')
     {
@@ -49,7 +87,7 @@ class User
     {
         try {
             $result_check_duplicate = $this->checkDuplicateRegister($student_code, $email, $phone);
-            if(!$result_check_duplicate['result']){
+            if (!$result_check_duplicate['result']) {
                 return $result_check_duplicate;
             }
 
@@ -80,12 +118,21 @@ class User
     public function login($student_code, $password)
     {
         try {
-            $stmt = $this->conn->prepare("SELECT password, status_register FROM users WHERE student_code = :student_code LIMIT 1");
+            $stmt = $this->conn->prepare("SELECT user_id, password, status_register, user_type, first_name, last_name, education_level, graduation_year, image FROM users WHERE student_code = :student_code LIMIT 1");
             $stmt->bindParam(':student_code', $student_code);
             $stmt->execute();
 
             if ($stmt->rowCount() === 1) {
                 $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                $id = $user['user_id'];
+                $user_type = $user['user_type'];
+                $first_name = $user['first_name'];
+                $last_name = $user['last_name'];
+                $education_level = $user['education_level'];
+                $graduation_year = $user['graduation_year'];
+                $image = $user['image'];
+
                 $password_hashed = $user['password'];
                 $status_register = $user['status_register'];
 
@@ -93,14 +140,24 @@ class User
                 if (password_verify($password, $password_hashed)) {
 
                     //ตรวจสอบสถานะการสมัครสมาชิก
+                    if (intval($status_register == 0)) {
+                        return ['result' => false, 'message' => 'บัญชีของท่านไม่ได้รับการอนุมัติให้เข้าใช้งาน กรุณาติดต่อเจ้าหน้าที่ที่เกี่ยวข้อง'];
+                    }
                     if (intval($status_register != 1)) {
                         return ['result' => false, 'message' => 'บัญชีของท่านกำลังอยู่ในระหว่างการตรวจสอบจากผู้ดูแลระบบ ท่านสามารถตรวจสอบผลการลงทะเบียนของท่านได้ผ่านทาง Email ของท่าน'];
                     }
 
-                    /*
-                    $_SESSION['user_id'] = $user['id'];
-                    $_SESSION['fullname'] = $user['fullname'];
-                    $_SESSION['user_type'] = $user['user_type'];*/
+                    //สร้าง session เมื่อเข้าสู่ระบบได้สำเร็จ
+                    $_SESSION['user'] = [
+                        'id' => $id,
+                        'student_code' => $student_code,
+                        'user_type' => $user_type == 'alumni' ? USER_TYPE_ALUMNI : USER_TYPE_STUDENT,
+                        'fullname' => $first_name . ' ' . $last_name,
+                        'education_level' => $education_level,
+                        'graduation_year' => $graduation_year,
+                        'image' => $image,
+                    ];
+
 
                     return ['result' => true, 'message' => 'เข้าสู่ระบบสำเร็จ'];
                 } else {

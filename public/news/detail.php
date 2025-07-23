@@ -635,7 +635,7 @@ if ($_SERVER['REQUEST_METHOD'] == "GET" && !empty($_GET['id'])) {
 
     <?php include '../../includes/footer.php' ?>
 
-    <script src="../../assets/js/bootstrap.bundle.min.js"></script>
+    <script src="../../assets/js/bootstrap.min.js"></script>
 </body>
 
 </html>

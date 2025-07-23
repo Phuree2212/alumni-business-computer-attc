@@ -160,4 +160,18 @@ class News
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function getAllImageNews($limit = null, $offset = null){
+        if (isset($limit) && isset($offset)) {
+            $stmt = $this->conn->prepare("SELECT image FROM {$this->table} ORDER BY created_at DESC LIMIT :limit OFFSET :offset");
+            $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+            $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+        } else {
+            $stmt = $this->conn->prepare("SELECT image FROM {$this->table} ORDER BY created_at DESC");
+        }
+
+        $stmt->execute();
+        $array_image = array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'image'); 
+        return $array_image;
+    }
+
 }

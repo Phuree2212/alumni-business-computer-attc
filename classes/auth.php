@@ -3,11 +3,11 @@
 class Auth {
 
     public function isLoggedInAdmin(){
-        return isset($_SESSION['user']) && ($_SESSION['user']['role'] === USER_TYPE_ADMIN || $_SESSION['user']['role'] === USER_TYPE_TEACHER);
+        return isset($_SESSION['user']) && ($_SESSION['user']['user_type'] === USER_TYPE_ADMIN || $_SESSION['user']['user_type'] === USER_TYPE_TEACHER);
     }
 
     public function isLoggedInUser(){
-        return isset($_SESSION['user']) && ($_SESSION['user']['role'] === USER_TYPE_ALUMNI || $_SESSION['user']['role'] === USER_TYPE_STUDENT);
+        return isset($_SESSION['user']) && ($_SESSION['user']['user_type'] === USER_TYPE_ALUMNI || $_SESSION['user']['user_type'] === USER_TYPE_STUDENT);
     }
 }
 

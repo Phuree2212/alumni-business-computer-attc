@@ -564,13 +564,13 @@ if ($_SERVER['REQUEST_METHOD'] == "GET" && !empty($_GET['id'])) {
                                     <div class="latest-post-aside media">
                                         <div class="lpa-left media-body">
                                             <div class="lpa-title">
-                                                <h5><a href="detail.php?id=<?php echo $id ?>"><?php echo $title ?></a></h5>
+                                                <h5><a href="../news/detail.php?id=<?php echo $id ?>"><?php echo $title ?></a></h5>
                                             </div>
                                             <div class="lpa-meta">
-                                                <a class="name" href="detail.php?id=<?php echo $id ?></a>">
+                                                <a class="name" href="../news/detail.php?id=<?php echo $id ?></a>">
                                                     Rachel Roth
                                                 </a>
-                                                <a class="date" href="detail.php?id=<?php echo $id ?></a>">
+                                                <a class="date" href="../news/detail.php?id=<?php echo $id ?></a>">
                                                     <?php echo thaiDateFormat($created_at) ?>
                                                 </a>
                                             </div>
@@ -634,7 +634,7 @@ if ($_SERVER['REQUEST_METHOD'] == "GET" && !empty($_GET['id'])) {
 
     <?php include '../../includes/footer.php' ?>
 
-    <script src="../../assets/js/bootstrap.bundle.min.js"></script>
+    <script src="../../assets/js/bootstrap.min.js"></script>
 </body>
 
 </html>

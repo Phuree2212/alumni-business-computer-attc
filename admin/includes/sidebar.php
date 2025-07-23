@@ -17,7 +17,7 @@
             <div class="menu-item">
                 <div class="d-flex align-items-center profile">
                     <img src="<?php echo $base_url . '/assets/images/user/' .
-                                    ($_SESSION['user']['role'] == 3 ? 'admin' : 'teacher') . '/' .
+                                    ($_SESSION['user']['user_type'] == USER_TYPE_ADMIN ? 'admin' : 'teacher') . '/' .
                                     $_SESSION['user']['image']; ?>"
                         alt="User" class="user-avatar me-3">
                     <div>

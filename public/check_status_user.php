@@ -7,19 +7,11 @@ $db = new Database();
 $conn = $db->connect();
 
 $user = new User($conn);
-$auth = new Auth();
-
-//ตรวจสมอบการเข้าสู่ระบบ
-if ($auth->isLoggedInUser()) {
-    header('Location: index.php');
-    exit;
-}
 
 if ($_SERVER['REQUEST_METHOD'] === "POST") {
-    $student_code = $_POST['student_code'] ?? '';
-    $password = $_POST['password'] ?? '';
+    $data = $_POST['data'] ?? '';
 
-    $result = $user->login($student_code, $password);
+    $result = $user->checkStatusRegisterUser($data);
 
     // ตั้งค่าหัวข้อว่าเป็น JSON
     header('Content-Type: application/json');
@@ -52,48 +44,26 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
                         <div class="row">
                             <div class="col-12">
                                 <div class="mb-5">
-                                    <h3 class="h3 text-center">เข้าสู่ระบบ ศิษย์เก่า/ศิษย์ปัจจุบัน</h3>
+                                    <h3 class="h3 text-center text-success">ตรวจสอบสถานะการลงทะเบียน</h3>
                                 </div>
                             </div>
                         </div>
 
-                        <form id="formLogin" method="post">
+                        <form id="formCheckStatusUser" method="post">
                             <div class="row gy-3 gy-md-4 overflow-hidden">
                                 <div class="col-12">
-                                    <label for="firstName" class="form-label">รหัสนักศึกษา<span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" name="student_code" id="student_code" placeholder="รหัสนักศึกษา" required>
-                                    <div class="invalid-feedback"></div>
-                                </div>
-
-                                <div class="col-12">
-                                    <label for="password" class="form-label">รหัสผ่าน<span class="text-danger">*</span></label>
-                                    <input type="password" class="form-control" name="password" id="password" value="" required>
-                                    <div class="invalid-feedback"></div>
-                                </div>
-
-                                <div class="col-12">
-                                    <input type="checkbox" class="form-check-input" id="rememberMe">
-                                    <label class="form-check-label" for="rememberMe">จดจำการเข้าสูระบบ</label>
+                                    <label for="text" class="form-label">กรอกรหัสนักศึกษา หรือ ชื่อ นามสกุล ของท่านเพื่อตรวจสอบสถานะการลงทะเบียน<span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="data" id="data" placeholder="รหัสนักศึกษา หรือ ชื่อจริง นามสกุล เช่น สมชาย ใจบุญ" required>
                                 </div>
 
                                 <div class="col-12">
                                     <div class="d-grid">
-                                        <button class="btn btn-lg btn-primary" type="submit">เข้าสู่ระบบ</button>
+                                        <button class="btn btn-lg btn-primary" type="submit">ตรวจสอบสถานะ</button>
                                     </div>
                                 </div>
                             </div>
                         </form>
 
-
-
-                        <div class="row">
-                            <div class="col-12">
-                                <hr class="mt-5 mb-4 border-secondary-subtle">
-                                <div class="col-12">
-                                    <p class="m-0 text-secondary text-center">คุณยังไม่ได้ลงทะเบียนใช่ไหม? <a href="register.php" class="link-primary text-decoration-none">ลงทะเบียน</a></p>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -107,16 +77,15 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
     <script src="../assets/alerts/modal.js"></script>
     <script src="function/validate_form.js"></script>
     <script>
-        document.getElementById('formLogin').addEventListener('submit', function(e) {
+        document.getElementById('formCheckStatusUser').addEventListener('submit', function(e) {
             e.preventDefault();
 
-            const studentCode = document.getElementById('student_code').value;
-            const password = document.getElementById('password').value;
+            const data = document.getElementById('data').value;
 
             const formData = new FormData(this);
             const body = new URLSearchParams(formData).toString()
 
-            fetch('login.php', {
+            fetch('check_status_user.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -126,9 +95,13 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
                 .then(response => response.json())
                 .then(response => {
                     if (response.result === true) {
-                        window.location.href = 'index.php';
+                        modalAlert('สถานะการสมัครสมาชิก', response.message, 'success')
+                        .then(()=>{
+                            window.location.href = 'login.php';
+                        })
+                        
                     } else {
-                        modalAlert('เข้าสู่ระบบไม่สำเร็จ', response.message, 'error');
+                        modalAlert('สถานะการสมัครสมาชิก', response.message, 'error');
                     }
                 })
                 .catch(error => {

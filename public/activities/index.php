@@ -130,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($start_d
 
     <?php include '../../includes/footer.php' ?>
 
-    <script src="../../assets/js/bootstrap.bundle.min.js"></script>
+    <script src="../../assets/js/bootstrap.min.js"></script>
 </body>
 
 </html>
