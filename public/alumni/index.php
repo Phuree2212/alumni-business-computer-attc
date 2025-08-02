@@ -264,11 +264,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
       <!-- Sidebar -->
       <div class="col-lg-3 col-md-4">
         <!-- Desktop Sidebar -->
-        <div class="d-none d-lg-block">
+        <div class="mb-2">
           <div class="sidebar-nav">
             <h5 class="mb-4">
               <i class="fas fa-users me-2 text-primary"></i>
-              รายชื่อศิษย์เก่า
+              จำนวนสมาชิกศิษย์เก่า
             </h5>
 
             <!-- Statistics -->
@@ -281,61 +281,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
               </div>
             </div>
 
-            <!-- Navigation Menu -->
-            <nav class="nav nav-pills flex-column">
-              <a href="javascript:void(0)" class="nav-link active">
-                <i class="fas fa-list me-2"></i>ทั้งหมด
-              </a>
-              <a href="javascript:void(0)" class="nav-link">
-                <i class="fas fa-certificate me-2"></i>ปวช.
-              </a>
-              <a href="javascript:void(0)" class="nav-link">
-                <i class="fas fa-graduation-cap me-2"></i>ปวส.
-              </a>
-              <a href="javascript:void(0)" class="nav-link">
-                <i class="fas fa-briefcase me-2"></i>ทำงานแล้ว
-              </a>
-            </nav>
+            
           </div>
         </div>
 
-        <!-- Mobile/Tablet Accordion -->
-        <div class="d-lg-none mb-3">
-          <div class="accordion" id="sidebarAccordion">
-            <div class="accordion-item">
-              <h2 class="accordion-header">
-                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter" aria-expanded="true">
-                  <i class="fas fa-filter me-2"></i>
-                  ตัวกรอง
-                </button>
-              </h2>
-              <div id="collapseFilter" class="accordion-collapse collapse show" data-bs-parent="#sidebarAccordion">
-                <div class="accordion-body p-2">
-                  <nav class="nav nav-pills flex-column">
-                    <a href="javascript:void(0)" class="nav-link active">
-                      <i class="fas fa-list me-2"></i>ทั้งหมด
-                    </a>
-                    <a href="javascript:void(0)" class="nav-link">
-                      <i class="fas fa-star me-2"></i>รุ่นใหม่ล่าสุด
-                    </a>
-                    <a href="javascript:void(0)" class="nav-link">
-                      <i class="fas fa-crown me-2"></i>รุ่นอาวุโส
-                    </a>
-                    <a href="javascript:void(0)" class="nav-link">
-                      <i class="fas fa-certificate me-2"></i>ปวช.
-                    </a>
-                    <a href="javascript:void(0)" class="nav-link">
-                      <i class="fas fa-graduation-cap me-2"></i>ปวส.
-                    </a>
-                    <a href="javascript:void(0)" class="nav-link">
-                      <i class="fas fa-briefcase me-2"></i>ทำงานแล้ว
-                    </a>
-                  </nav>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        
       </div>
 
       <!-- Main Content -->
@@ -449,6 +399,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
                 ?>
               </div>
             </div>
+            
           </div>
 
         </div>

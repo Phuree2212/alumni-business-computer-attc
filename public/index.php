@@ -4,9 +4,13 @@ require_once '../classes/news.php';
 require_once '../classes/activities.php';
 require_once '../classes/gallery.php';
 require_once '../config/function.php';
+require_once '../classes/visitor_tracker.php';
 
 $db = new Database();
 $conn = $db->connect();
+$tracker = new VisitorTracker($conn);
+$tracker->track();
+
 $news = new News($conn);
 $activity = new Activities($conn);
 

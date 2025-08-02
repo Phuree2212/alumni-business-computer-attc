@@ -46,9 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($start_d
 <html lang="th">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <?php include '../../../includes/title.php'; ?>
     <link href="../../../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="../../../assets/css/bootstrap-icons.min.css" rel="stylesheet">
     <link href="../../../assets/css/style_admin.css" rel="stylesheet">

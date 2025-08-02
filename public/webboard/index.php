@@ -1,5 +1,75 @@
 <?php
-require_once '../../config/config.php';
+require_once '../../auth/auth_user.php';
+require_once '../../classes/webboard.php';
+require_once '../../classes/pagination_helper.php';
+require_once '../../config/function.php';
+
+$db = new Database();
+$conn = $db->connect();
+$webboard = new Webboard($conn);
+
+// ตั้งค่าพื้นฐาน
+$currentPage   = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$itemsPerPage  = 10;
+
+// รับค่าการค้นหา
+$keyword    = trim($_GET['keyword'] ?? '');
+$start_date = $_GET['start_date'] ?? '';
+$end_date   = $_GET['end_date'] ?? '';
+$year_group   = $_GET['year_group'] ?? 0;
+
+// ถ้ามีการกรองข้อมูล
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($start_date) || !empty($end_date) || !empty($year_group))) {
+
+  // นับจำนวนรายการที่ตรงกับเงื่อนไขการค้นหา
+  $totalItems = $webboard->getSearchAndFilterCount($keyword, $start_date, $end_date, $year_group);
+
+  // สร้าง pagination
+  $pagination = new PaginationHelper($currentPage, $itemsPerPage, $totalItems);
+
+  // ดึงข่าวตามเงื่อนไข
+  $topic_posts = $webboard->searchAndFilterForum(
+    $keyword,
+    $start_date,
+    $end_date,
+    $year_group,
+    $pagination->getLimit(),
+    $pagination->getOffset()
+  );
+} else {
+  // นับจำนวนรายการทั้งหมด
+  $totalItems = $webboard->getSearchAndFilterCount($keyword, $start_date, $end_date);
+
+  // สร้าง pagination
+  $pagination = new PaginationHelper($currentPage, $itemsPerPage, $totalItems);
+
+  // ดึงกระทู้ที่เป็นสาธารณะ
+  $topic_posts = $webboard->searchAndFilterForum(
+    $keyword,
+    $start_date,
+    $end_date,
+    $year_group,
+    $pagination->getLimit(),
+    $pagination->getOffset()
+  );
+}
+
+if(isset($_GET['forum_me']) && $_GET['forum_me'] == 'true'){
+   // นับจำนวนรายการทั้งหมด
+  $totalItems = $webboard->countTopicMe($_SESSION['user']['id'], $_SESSION['user']['user_type']);
+
+  // สร้าง pagination
+  $pagination = new PaginationHelper($currentPage, $itemsPerPage, $totalItems);
+
+  // ดึงกระทู้ที่เป็นสาธารณะ
+  $topic_posts = $webboard->getTopicMe(
+    $_SESSION['user']['id'],
+    $_SESSION['user']['user_type'],
+    $pagination->getLimit(),
+    $pagination->getOffset()
+  );
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -9,11 +79,13 @@ require_once '../../config/config.php';
   <link href="../../assets/css/bootstrap.min.css" rel="stylesheet">
   <link href="../../assets/css/bootstrap-icons.min.css" rel="stylesheet">
   <link href="../../assets/css/style.css" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/sweetalert2.min.css">
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.8/css/all.css">
+  <!-- TinyMCE Editor -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/tinymce.min.js"></script>
 </head>
 
 <style>
-
   .sidebar-nav {
     background-color: #fff;
     border-radius: 0.5rem;
@@ -216,102 +288,31 @@ require_once '../../config/config.php';
       <!-- Sidebar -->
       <div class="col-lg-3 col-md-4">
         <!-- Desktop Sidebar -->
-        <div class="d-none d-lg-block">
+        <div class="mb-3 d-lg-block">
           <div class="sidebar-nav">
             <!-- New Discussion Button -->
             <button class="btn btn-primary btn-new-discussion w-100 mb-4" type="button" data-bs-toggle="modal" data-bs-target="#threadModal">
               <i class="fas fa-plus me-2"></i>
-              NEW DISCUSSION
+              เพิ่มกระทู้ใหม่่
             </button>
 
             <!-- Navigation Menu -->
             <nav class="nav nav-pills flex-column">
-              <a href="javascript:void(0)" class="nav-link active">
-                <i class="fas fa-list me-2"></i>All Threads
+              <a href="index.php" class="nav-link">
+                <i class="fas fa-list me-2"></i>รวมกระทู้สาธารณะทั้งหมด
               </a>
-              <a href="javascript:void(0)" class="nav-link">
-                <i class="fas fa-fire me-2"></i>Popular this week
-              </a>
-              <a href="javascript:void(0)" class="nav-link">
-                <i class="fas fa-trophy me-2"></i>Popular all time
-              </a>
-              <a href="javascript:void(0)" class="nav-link">
-                <i class="fas fa-check-circle me-2"></i>Solved
-              </a>
-              <a href="javascript:void(0)" class="nav-link">
-                <i class="fas fa-question-circle me-2"></i>Unsolved
-              </a>
-              <a href="javascript:void(0)" class="nav-link">
-                <i class="fas fa-clock me-2"></i>No replies yet
+              <?php if($_SESSION['user']['user_type'] == USER_TYPE_ALUMNI){ ?>
+                <a href="index.php?year_group=<?php echo $_SESSION['user']['graduation_year'] ?>" class="nav-link">
+                  <i class="fas fa-fire me-2"></i>กระทู้ในรุ่นปีการศึกษา <?php echo $_SESSION['user']['graduation_year'] ?>
+                </a>
+              <?php } ?>
+              <a href="index.php?forum_me=true" class="nav-link">
+                <i class="fas fa-list me-2"></i>กระทู้ของฉัน
               </a>
             </nav>
           </div>
         </div>
 
-        <!-- Mobile/Tablet Accordion -->
-        <div class="d-lg-none mb-3">
-          <div class="accordion" id="sidebarAccordion">
-            <!-- Navigation Accordion Item -->
-            <div class="accordion-item">
-              <h2 class="accordion-header">
-                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNavigation" aria-expanded="true" aria-controls="collapseNavigation">
-                  <i class="fas fa-filter me-2"></i>
-                  Forum Categories
-                </button>
-              </h2>
-              <div id="collapseNavigation" class="accordion-collapse collapse show" data-bs-parent="#sidebarAccordion">
-                <div class="accordion-body p-2">
-                  <nav class="nav nav-pills flex-column">
-                    <a href="javascript:void(0)" class="nav-link active">
-                      <i class="fas fa-list me-2"></i>All Threads
-                    </a>
-                    <a href="javascript:void(0)" class="nav-link">
-                      <i class="fas fa-fire me-2"></i>Popular this week
-                    </a>
-                    <a href="javascript:void(0)" class="nav-link">
-                      <i class="fas fa-trophy me-2"></i>Popular all time
-                    </a>
-                    <a href="javascript:void(0)" class="nav-link">
-                      <i class="fas fa-check-circle me-2"></i>Solved
-                    </a>
-                    <a href="javascript:void(0)" class="nav-link">
-                      <i class="fas fa-question-circle me-2"></i>Unsolved
-                    </a>
-                    <a href="javascript:void(0)" class="nav-link">
-                      <i class="fas fa-clock me-2"></i>No replies yet
-                    </a>
-                  </nav>
-                </div>
-              </div>
-            </div>
-
-            <!-- Quick Actions Accordion Item -->
-            <div class="accordion-item">
-              <h2 class="accordion-header">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseActions" aria-expanded="false" aria-controls="collapseActions">
-                  <i class="fas fa-bolt me-2"></i>
-                  Quick Actions
-                </button>
-              </h2>
-              <div id="collapseActions" class="accordion-collapse collapse" data-bs-parent="#sidebarAccordion">
-                <div class="accordion-body p-2">
-                  <button class="btn btn-primary btn-new-discussion w-100 mb-2" type="button" data-bs-toggle="modal" data-bs-target="#threadModal">
-                    <i class="fas fa-plus me-2"></i>
-                    NEW DISCUSSION
-                  </button>
-                  <button class="btn btn-outline-secondary w-100 mb-2" type="button">
-                    <i class="fas fa-bookmark me-2"></i>
-                    My Bookmarks
-                  </button>
-                  <button class="btn btn-outline-secondary w-100" type="button">
-                    <i class="fas fa-user-edit me-2"></i>
-                    My Posts
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- Main Content -->
@@ -320,21 +321,15 @@ require_once '../../config/config.php';
           <!-- Header Controls -->
           <div class="forum-header">
             <div class="row align-items-center">
-              <div class="col-md-6">
-                <div class="d-flex align-items-center">
-                  <select class="form-select form-select-sm me-3" style="width: auto;">
-                    <option selected>Latest</option>
-                    <option value="1">Popular</option>
-                    <option value="2">Solved</option>
-                    <option value="3">Unsolved</option>
-                    <option value="4">No Replies Yet</option>
-                  </select>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="d-flex justify-content-md-end">
-                  <input type="text" class="form-control form-control-sm" style="max-width: 250px;" placeholder="Search forum..." />
-                </div>
+              <div class="col-12">
+                <form action="index.php" method="GET">
+                  <div class="d-flex gap-2 justify-content-md-end">
+                    <input type="hidden" name="year_group" value="<?php echo !empty($year_group) ? $year_group : 0 ?>">
+                    <input type="text" value="<?php echo !empty($keyword) ? $keyword : '' ?>" name="keyword" class="form-control form-control-sm" style="max-width: 250px;" placeholder="ค้นหากระทู้ เนื้อหา หัวข้อ..." />
+                    <button type="submit" class="btn btn-primary">ค้นหา</button>
+                    <a href="index.php" class="btn btn-secondary">รีเซ็ต</a>
+                  </div>
+                </form>
               </div>
             </div>
           </div>
@@ -342,380 +337,232 @@ require_once '../../config/config.php';
           <!-- Forum List -->
           <div class="forum-content" id="forumList">
             <div class="row g-3">
-              <!-- Forum Item 1 -->
-              <div class="col-12">
-                <div class="card forum-card">
-                  <div class="card-body">
-                    <div class="row align-items-center">
-                      <div class="col-auto">
-                        <img src="https://bootdey.com/img/Content/avatar/avatar1.png" class="rounded-circle forum-avatar" alt="User" />
-                      </div>
-                      <div class="col">
-                        <h6 class="mb-1">
-                          <a href="#" class="forum-title" onclick="showForumDetail()">Realtime fetching data</a>
-                        </h6>
-                        <p class="forum-description mb-2">
-                          lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet
-                        </p>
-                        <div class="forum-meta">
-                          <a href="javascript:void(0)" class="text-decoration-none">drewdan</a> replied
-                          <span class="fw-bold">13 minutes ago</span>
-                        </div>
-                      </div>
-                      <div class="col-auto">
-                        <div class="forum-stats">
-                          <span><i class="far fa-eye"></i> 19</span>
-                          <span><i class="far fa-comment"></i> 3</span>
+
+              <?php if (!empty($topic_posts)) { ?>
+                <?php foreach ($topic_posts as $item) {
+                  $id = $item['post_id'];
+                  $fullname = $item['first_name'] . ' ' . $item['last_name'];
+                  $path_image = '../../assets/images/user/';
+                  $path_user = ($item['user_type'] == USER_TYPE_ALUMNI ? 'alumni' : 'student') . '/' . $item['profile'];
+                  $path = $path_image . $path_user;
+
+                  $like_count = $item['like_count'];
+                  $comment_count = $item['comment_count'];
+
+                  $title = $item['title'];
+                  $content = $item['content'];
+
+                  $created_at = $item['created_at'];
+                  $time_only = date("H:i", strtotime($created_at));
+
+                  $thai_format = thaiDateFormat($created_at) . ' ' . $time_only;
+
+
+                ?>
+
+
+                  <div class="col-12">
+                    <div class="card forum-card">
+                      <div class="card-body">
+                        <div class="row align-items-center">
+                          <div class="col-auto">
+                            <div class="d-flex">
+                              <div class="avatar me-3">
+                                <img src="<?php echo !empty($item['profile']) ? $path : '../../assets/images/user/no-image-profile.jpg' ?>" class="rounded-circle forum-avatar" alt="User" />
+                              </div>
+                              <div class="d-flex flex-column media-body">
+                                <label><?php echo $fullname; ?></label>
+                                <span style="font-size: 0.875rem; color: #6c757d;">ประเภทผู้ใช้งาน : <?php echo $item['user_type'] == USER_TYPE_ALUMNI ? 'ศิษย์เก่า' : 'นักเรียน นักศึกษา' ?></span>
+                              </div>
+                            </div>
+
+                          </div>
+                          <div class="mt-3 col-12">
+                            <h6 class="">
+                              <a href="topic.php?id=<?php echo $id ?>" class="forum-title"><?php echo $title ?></a>
+                            </h6>
+                            <p class="forum-description mb-2">
+                              <?php echo $content ?>
+                            </p>
+                            <div class="forum-meta">
+                              <a href="javascript:void(0)" class="text-decoration-none">ตั้งกระทู้เมื่อ</a>
+                              <span class="fw-bold"><?php echo $thai_format ?></span>
+                            </div>
+                          </div>
+                          <div class="col-auto">
+                            <div class="forum-stats">
+                              <span><i class="far fa-thumbs-up"></i> <?php echo $like_count ?></span>
+                              <span><i class="far fa-comment"></i> <?php echo $comment_count ?></span>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
+
+              <?php }
+              } ?>
+
+              <?php if (empty($topic_posts)) { ?>
+                <div class="text-center text-danger py-4">ไม่พบข้อมูลกระทู้</div>
+              <?php } ?>
+
+              <!-- Pagination -->
+              <div class="pagination-wrapper">
+                <div class="row align-items-center">
+                  <?php
+
+                  echo $pagination->renderBootstrap();
+
+                  ?>
                 </div>
               </div>
 
-              <!-- Forum Item 2 -->
-              <div class="col-12">
-                <div class="card forum-card">
-                  <div class="card-body">
-                    <div class="row align-items-center">
-                      <div class="col-auto">
-                        <img src="https://bootdey.com/img/Content/avatar/avatar2.png" class="rounded-circle forum-avatar" alt="User" />
-                      </div>
-                      <div class="col">
-                        <h6 class="mb-1">
-                          <a href="#" class="forum-title" onclick="showForumDetail()">Laravel 7 database backup</a>
-                        </h6>
-                        <p class="forum-description mb-2">
-                          lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet
-                        </p>
-                        <div class="forum-meta">
-                          <a href="javascript:void(0)" class="text-decoration-none">jlrdw</a> replied
-                          <span class="fw-bold">3 hours ago</span>
-                        </div>
-                      </div>
-                      <div class="col-auto">
-                        <div class="forum-stats">
-                          <span><i class="far fa-eye"></i> 18</span>
-                          <span><i class="far fa-comment"></i> 1</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Forum Item 3 -->
-              <div class="col-12">
-                <div class="card forum-card">
-                  <div class="card-body">
-                    <div class="row align-items-center">
-                      <div class="col-auto">
-                        <img src="https://bootdey.com/img/Content/avatar/avatar3.png" class="rounded-circle forum-avatar" alt="User" />
-                      </div>
-                      <div class="col">
-                        <h6 class="mb-1">
-                          <a href="#" class="forum-title" onclick="showForumDetail()">Http client post raw content</a>
-                        </h6>
-                        <p class="forum-description mb-2">
-                          lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet
-                        </p>
-                        <div class="forum-meta">
-                          <a href="javascript:void(0)" class="text-decoration-none">ciungulete</a> replied
-                          <span class="fw-bold">7 hours ago</span>
-                        </div>
-                      </div>
-                      <div class="col-auto">
-                        <div class="forum-stats">
-                          <span><i class="far fa-eye"></i> 32</span>
-                          <span><i class="far fa-comment"></i> 2</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Forum Item 4 -->
-              <div class="col-12">
-                <div class="card forum-card">
-                  <div class="card-body">
-                    <div class="row align-items-center">
-                      <div class="col-auto">
-                        <img src="https://bootdey.com/img/Content/avatar/avatar4.png" class="rounded-circle forum-avatar" alt="User" />
-                      </div>
-                      <div class="col">
-                        <h6 class="mb-1">
-                          <a href="#" class="forum-title" onclick="showForumDetail()">Top rated filter not working</a>
-                        </h6>
-                        <p class="forum-description mb-2">
-                          lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet
-                        </p>
-                        <div class="forum-meta">
-                          <a href="javascript:void(0)" class="text-decoration-none">bugsysha</a> replied
-                          <span class="fw-bold">11 hours ago</span>
-                        </div>
-                      </div>
-                      <div class="col-auto">
-                        <div class="forum-stats">
-                          <span><i class="far fa-eye"></i> 49</span>
-                          <span><i class="far fa-comment"></i> 9</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Forum Item 5 -->
-              <div class="col-12">
-                <div class="card forum-card">
-                  <div class="card-body">
-                    <div class="row align-items-center">
-                      <div class="col-auto">
-                        <img src="https://bootdey.com/img/Content/avatar/avatar5.png" class="rounded-circle forum-avatar" alt="User" />
-                      </div>
-                      <div class="col">
-                        <h6 class="mb-1">
-                          <a href="#" class="forum-title" onclick="showForumDetail()">Create a delimiter field</a>
-                        </h6>
-                        <p class="forum-description mb-2">
-                          lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet
-                        </p>
-                        <div class="forum-meta">
-                          <a href="javascript:void(0)" class="text-decoration-none">jackalds</a> replied
-                          <span class="fw-bold">12 hours ago</span>
-                        </div>
-                      </div>
-                      <div class="col-auto">
-                        <div class="forum-stats">
-                          <span><i class="far fa-eye"></i> 65</span>
-                          <span><i class="far fa-comment"></i> 10</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Forum Item 6 -->
-              <div class="col-12">
-                <div class="card forum-card">
-                  <div class="card-body">
-                    <div class="row align-items-center">
-                      <div class="col-auto">
-                        <img src="https://bootdey.com/img/Content/avatar/avatar1.png" class="rounded-circle forum-avatar" alt="User" />
-                      </div>
-                      <div class="col">
-                        <h6 class="mb-1">
-                          <a href="#" class="forum-title" onclick="showForumDetail()">One model 4 tables</a>
-                        </h6>
-                        <p class="forum-description mb-2">
-                          lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet
-                        </p>
-                        <div class="forum-meta">
-                          <a href="javascript:void(0)" class="text-decoration-none">bugsysha</a> replied
-                          <span class="fw-bold">14 hours ago</span>
-                        </div>
-                      </div>
-                      <div class="col-auto">
-                        <div class="forum-stats">
-                          <span><i class="far fa-eye"></i> 45</span>
-                          <span><i class="far fa-comment"></i> 4</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Forum Item 7 -->
-              <div class="col-12">
-                <div class="card forum-card">
-                  <div class="card-body">
-                    <div class="row align-items-center">
-                      <div class="col-auto">
-                        <img src="https://bootdey.com/img/Content/avatar/avatar1.png" class="rounded-circle forum-avatar" alt="User" />
-                      </div>
-                      <div class="col">
-                        <h6 class="mb-1">
-                          <a href="#" class="forum-title" onclick="showForumDetail()">Auth attempt returns false</a>
-                        </h6>
-                        <p class="forum-description mb-2">
-                          lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet
-                        </p>
-                        <div class="forum-meta">
-                          <a href="javascript:void(0)" class="text-decoration-none">michaeloravec</a> replied
-                          <span class="fw-bold">18 hours ago</span>
-                        </div>
-                      </div>
-                      <div class="col-auto">
-                        <div class="forum-stats">
-                          <span><i class="far fa-eye"></i> 70</span>
-                          <span><i class="far fa-comment"></i> 3</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
 
-            <!-- Pagination -->
-            <div class="d-flex justify-content-center mt-4">
-              <nav aria-label="Forum pagination">
-                <ul class="pagination pagination-sm pagination-custom mb-0">
-                  <li class="page-item disabled">
-                    <span class="page-link"><i class="fas fa-chevron-left"></i></span>
-                  </li>
-                  <li class="page-item"><a class="page-link" href="javascript:void(0)">1</a></li>
-                  <li class="page-item active"><span class="page-link">2</span></li>
-                  <li class="page-item"><a class="page-link" href="javascript:void(0)">3</a></li>
-                  <li class="page-item">
-                    <a class="page-link" href="javascript:void(0)"><i class="fas fa-chevron-right"></i></a>
-                  </li>
-                </ul>
-              </nav>
-            </div>
-          </div>
-
-          <!-- Forum Detail (Hidden by default) -->
-          <div class="forum-content" id="forumDetail" style="display: none;">
-            <div class="mb-3">
-              <button class="btn btn-outline-secondary btn-sm d-flex align-items-center" onclick="showForumList()">
-                <i class="fas fa-arrow-left me-2"></i>Back to Forum
-              </button>
-            </div>
-
-            <div class="card forum-card mb-3">
-              <div class="card-body">
-                <div class="row">
-                  <div class="col-auto text-center">
-                    <img src="https://bootdey.com/img/Content/avatar/avatar1.png" class="rounded-circle" width="60" alt="User" />
-                    <small class="d-block text-muted mt-1">Newbie</small>
-                  </div>
-                  <div class="col">
-                    <div class="d-flex align-items-center mb-2">
-                      <h6 class="mb-0 me-2">Mokrani</h6>
-                      <small class="text-muted">1 hour ago</small>
-                    </div>
-                    <h4 class="mb-3">Realtime fetching data</h4>
-                    <div class="forum-description">
-                      <p>Hellooo :)</p>
-                      <p>I'm newbie with laravel and i want to fetch data from database in realtime for my dashboard anaytics and i found a solution with ajax but it dosen't work if any one have a simple solution it will be helpful</p>
-                      <p>Thank</p>
-                    </div>
-                  </div>
-                  <div class="col-auto">
-                    <div class="forum-stats">
-                      <span><i class="far fa-eye"></i> 19</span>
-                      <span><i class="far fa-comment"></i> 3</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Reply -->
-            <div class="card forum-card">
-              <div class="card-body">
-                <div class="row">
-                  <div class="col-auto text-center">
-                    <img src="https://bootdey.com/img/Content/avatar/avatar2.png" class="rounded-circle" width="50" alt="User" />
-                    <small class="d-block text-muted mt-1">Pro</small>
-                  </div>
-                  <div class="col">
-                    <div class="d-flex align-items-center mb-2">
-                      <h6 class="mb-0 me-2">drewdan</h6>
-                      <small class="text-muted">1 hour ago</small>
-                    </div>
-                    <div class="forum-description">
-                      <p>What exactly doesn't work with your ajax calls?</p>
-                      <p>Also, WebSockets are a great solution for realtime data on a dashboard. Laravel offers this out of the box using broadcasting</p>
-                    </div>
-                    <div class="mt-3">
-                      <button class="btn btn-sm btn-outline-secondary me-2">
-                        <i class="fas fa-heart me-1"></i>1
-                      </button>
-                      <button class="btn btn-sm btn-outline-primary">Reply</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- New Thread Modal - ตรงกลางหน้าจอ -->
-  <div class="modal fade" id="threadModal" tabindex="-1" aria-labelledby="threadModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-      <div class="modal-content">
-        <form>
-          <div class="modal-header bg-primary text-white">
-            <h5 class="modal-title" id="threadModalLabel">
-              <i class="fas fa-plus me-2"></i>New Discussion
-            </h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <div class="mb-3">
-              <label for="threadTitle" class="form-label">Title</label>
-              <input type="text" class="form-control" id="threadTitle" placeholder="Enter title" autofocus />
+    <!-- New Thread Modal - ตรงกลางหน้าจอ -->
+    <div class="modal fade" id="threadModal" tabindex="-1" aria-labelledby="threadModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <form id="createTopic">
+            <div class="modal-header bg-primary text-white">
+              <h5 class="modal-title" id="threadModalLabel">
+                <i class="fas fa-plus me-2"></i>สร้างกระทู้ใหม่
+              </h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="mb-3">
-              <label for="threadContent" class="form-label">Content</label>
-              <textarea class="form-control" id="threadContent" rows="6" placeholder="Write your discussion content here..."></textarea>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="threadTitle" class="form-label">หัวข้อ / หัวเรื่อง</label>
+                <input type="text" name="title" class="form-control" id="threadTitle" placeholder="หัวข้อของกระทู้" required autofocus />
+                <div class="invalid-feedback"></div>
+              </div>
+              <div class="mb-3">
+                <label for="threadContent" class="form-label">เนื้อหา</label>
+                <textarea class="form-control" name="content" id="content-editor" rows="6" placeholder="เขียนเนื้อหาการสนทนาของคุณที่นี่..." required></textarea>
+                <div class="is-invalid text-danger" id="invalidContent"></div>
+              </div>
+              <div class="mb-3">
+                <label for="threadContent" class="form-label">ประเภทการมองเห็นกระทู้</label>
+                <select class="form-select" name="group_type" id="selectType">
+                  <option value="public">สาธารณะ</option>
+                  <option value="year_group">รุ่นของฉัน</option>
+                </select>
+                <div class="form-text">*สาธารณะ : ทุกคนจะสามารถมองเห็นกระทู้ของท่านได้หมด</div>
+                <div class="form-text">*รุ่นของฉัน : ผู้ที่จบปีการศึกษาปีเดียวกับท่าน หรือเพื่อนร่วมรุ่นจึงจะสามารถเห็นกระทู้นี้ได้</div>
+              </div>
+              <div class="mb-3" style="max-width: 300px;">
+                <label for="customFile" class="form-label">แนบไฟล์ภาพ</label>
+                <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" name="images[]" class="form-control form-control-sm" id="imageFile" multiple />
+                <div class="form-text">รองรับไฟล์: JPEG, PNG, GIF, WebP (ขนาดไม่เกิน 5MB ต่อไฟล์, สูงสุด 5 ไฟล์)</div>
+              </div>
             </div>
-            <div class="mb-3" style="max-width: 300px;">
-              <label for="customFile" class="form-label">Attachment</label>
-              <input type="file" class="form-control form-control-sm" id="customFile" multiple />
+            <div class="modal-footer">
+              <button type="button" class="btn btn-light" data-bs-dismiss="modal">ยกเลิก</button>
+              <button type="button" onclick="createTopic()" class="btn btn-primary">
+                <i class="fas fa-paper-plane me-2"></i>สร้าง
+              </button>
             </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-primary">
-              <i class="fas fa-paper-plane me-2"></i>Post
-            </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
+
   </div>
 
 
   <?php include '../../includes/footer.php' ?>
 
   <script src="../../assets/js/bootstrap.min.js"></script>
+  <script src="../../assets/js/function/create_data.js"></script>
+  <script src="../function/validate_form.js"></script>
+  <script src="../../assets/js/sweetalert2.all.min.js"></script>
+  <script src="../../assets/alerts/modal.js"></script>
 
   <script>
-    function showForumDetail() {
-      document.getElementById('forumList').style.display = 'none';
-      document.getElementById('forumDetail').style.display = 'block';
-    }
+    // Initialize TinyMCE Editor
+    tinymce.init({
+      selector: '#content-editor',
+      height: 400,
+      language: 'th',
+      plugins: [
+        'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+        'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+        'insertdatetime', 'media', 'table', 'help', 'wordcount'
+      ],
+      toolbar: 'undo redo | blocks | ' +
+        'bold italic backcolor | alignleft aligncenter ' +
+        'alignright alignjustify | bullist numlist outdent indent | ' +
+        'removeformat | help',
+      content_style: 'body { font-family: Sarabun, Arial, sans-serif; font-size: 14px; }',
+      menubar: false,
+      branding: false,
+      elementpath: false,
+      setup: function(editor) {
+        editor.on('change', function() {
+          editor.save();
+        });
+      }
+    });
 
-    function showForumList() {
-      document.getElementById('forumDetail').style.display = 'none';
-      document.getElementById('forumList').style.display = 'block';
-    }
+    function createTopic() {
+      if (!checkvalidFormCreateTopic()) {
+        return;
+      }
 
-    // Auto-collapse sidebar on mobile after clicking menu item
-    document.addEventListener('DOMContentLoaded', function() {
-      const sidebarLinks = document.querySelectorAll('.sidebar-nav .nav-link');
-      const sidebarCollapse = document.getElementById('sidebarNav');
+      const form = document.getElementById('createTopic');
+      const formData = new FormData(form);
 
-      sidebarLinks.forEach(link => {
-        link.addEventListener('click', function() {
-          if (window.innerWidth < 992) {
-            const bsCollapse = new bootstrap.Collapse(sidebarCollapse, {
-              toggle: false
-            });
-            bsCollapse.hide();
+      modalConfirm('ยืนยันการสร้างกระทู้ใหม่', 'ยืนยันการสร้างกระทู้ใหม่')
+        .then((result) => {
+          if (result.isConfirmed) {
+            fetch('create.php', {
+                method: 'POST',
+                body: formData
+              })
+              .then(response => response.json())
+              .then(response => {
+                if (response.result === true) {
+                  modalAlert('สร้างกระทู้ใหม่สำเร็จ', 'สร้างกระทู้ใหม่สำเร็จ', 'success')
+                    .then(() => location.reload());
+                } else {
+                  modalAlert('สร้างกระทู้ไม่สำเร็จ เกิดข้อผิดำลาดขึ้น', response.message, 'error');
+                }
+              })
+              .catch(error => {
+                modalAlert('การเชื่อมต่อล้มเหลว', 'ไม่สามารถติดต่อกับเซิร์ฟเวอร์ได้', 'error');
+                console.error('Fetch error:', error);
+              });
           }
         });
-      });
-    });
+    }
+
+    function checkvalidFormCreateTopic() {
+      const inputTitle = document.getElementById('threadTitle');
+      const inputContent = tinymce.get('content-editor').getContent();
+
+      const showErrorContent = document.getElementById('invalidContent');
+
+      console.log(showErrorContent);
+
+      let isValid = true;
+
+      if (!inputTitle.value) {
+        showFieldError('threadTitle', 'กรุณากรอกหัวข้อเรื่อง');
+        isValid = false;
+      }
+      if (!inputContent.trim()) {
+        showErrorContent.textContent = 'กรุณากรอกข้อมูลเนื้อหา';
+        isValid = false;
+      }
+
+      return isValid;
+    }
   </script>
 </body>
 

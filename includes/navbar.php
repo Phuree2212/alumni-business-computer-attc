@@ -1,5 +1,5 @@
 <!-- Navigation -->
-<nav class="navbar navbar-expand-lg navbar-light" style="top: 0; position: sticky; z-index: 9999;">
+<nav class="navbar navbar-expand-lg navbar-light" style="top: 0; position: sticky; z-index: 99;">
     <div class="container">
         <a class="navbar-brand d-flex align-items-center" href="<?php echo $base_url ?>/public/">
             <img class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;" src="<?php echo $base_url; ?>/assets/images/logo/logo_department.png" alt="">

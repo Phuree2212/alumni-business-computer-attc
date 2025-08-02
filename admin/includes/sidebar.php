@@ -81,13 +81,9 @@
                         <i class="fas fa-calendar"></i>
                         <span>กิจกรรม</span>
                     </a>
-                    <a href="<?php echo $base_url ?>/admin/forum/" class="menu-link">
+                    <a href="<?php echo $base_url ?>/admin/webboard/" class="menu-link">
                         <i class="fas fa-comments"></i>
                         <span>กระทู้</span>
-                    </a>
-                    <a href="<?php echo $base_url ?>/admin/gallery/" class="menu-link">
-                        <i class="fas fa-images"></i>
-                        <span>แกลเลอรี่</span>
                     </a>
                 </div>
             </div>
@@ -102,10 +98,21 @@
             </div>
 
             <div class="menu-item">
-                <a href="#" class="menu-link">
+                <a href="#" class="menu-link" data-bs-toggle="collapse" data-bs-target="#report-menu">
                     <i class="fas fa-question"></i>
-                    <span>รายงานผู้ใช้งานที่ไม่เหมาะสม</span>
+                    <span>รายงานการใช้งานที่ไม่เหมาะสม</span>
+                    <i class="fas fa-chevron-down ms-auto"></i>
                 </a>
+                <div class="collapse submenu" id="report-menu">
+                    <a href="<?php echo $base_url ?>/admin/report_problems/topic/" class="menu-link">
+                        <i class="fas fa-newspaper"></i>
+                        <span>รายงานกระทู้</span>
+                    </a>
+                    <a href="<?php echo $base_url ?>/admin/report_problems/comment/" class="menu-link">
+                        <i class="fas fa-calendar"></i>
+                        <span>รายงานความคิดเห็น</span>
+                    </a>
+                </div>
             </div>
 
             <div class="menu-category">ระบบ</div>

@@ -13,9 +13,7 @@ $activity = new Activities($conn);
 <html lang="th">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <?php include '../../includes/title.php'; ?>
     <link href="../../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="../../assets/css/bootstrap-icons.min.css" rel="stylesheet">
     <link href="../../assets/css/style_admin.css" rel="stylesheet">
@@ -68,7 +66,7 @@ $activity = new Activities($conn);
 
     <div class="main-content">
         <div class="card-body">
-            <h3 class="h3 mb-4">สร้างข้อมูลกิจกรรมรใหม่</h3>
+            <h3 class="h3 mb-4">สร้างข้อมูลกิจกรรมใหม่</h3>
             <form method="POST" enctype="multipart/form-data">
                 <div class="mb-3">
                     <label class="form-label">หัวเรื่อง<span class="text-danger">*</span></label>

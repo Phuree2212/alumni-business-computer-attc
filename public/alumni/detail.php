@@ -17,6 +17,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id'])) {
   $education_level = $alumni_detail['education_level'];
   $graduation_year = $alumni_detail['graduation_year'];
 
+  $current_job = !empty($alumni_detail['current_job']) ? $alumni_detail['current_job'] : 'ไม่มีข้อมูล';
+  $current_company = !empty($alumni_detail['current_company']) ? $alumni_detail['current_company'] : 'ไม่มีข้อมูล';
+  $current_salary = !empty($alumni_detail['current_salary']) ? $alumni_detail['current_salary'] : 'ไม่มีข้อมูล';
+
   $email = $alumni_detail['email'];
   $phone = $alumni_detail['phone'];
   $address = !empty($alumni_detail['address']) ? $alumni_detail['address'] : "ไม่มีข้อมูล";
@@ -43,8 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id'])) {
 </head>
 
 <style>
-  .alumni-detail-container {
-    min-height: calc(100vh - 3.5rem);
+  .alumni-detail-container{
     background-color: #f8f9fa;
   }
 
@@ -294,12 +297,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id'])) {
               <i class="fas fa-calendar me-2"></i>ปีที่จบการศึกษา <?php echo $graduation_year ?>
             </p>
           </div>
-          <div class="col-lg-3 text-center">
-            <div class="gpa-circle">
-              3.65
-            </div>
-            <small class="d-block mt-2 opacity-75">เกรดเฉลี่ย</small>
-          </div>
         </div>
       </div>
 
@@ -325,16 +322,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id'])) {
                 <span class="info-value">15 มีนาคม 2548 (อายุ 20 ปี)</span>
               </div>
               <div class="info-row">
-                <span class="info-label">ระดับการศึกษา</span>
+                <span class="info-label">ระดับชั้นที่การศึกษา</span>
                 <span class="info-value"><?php echo $education_level ?></span>
               </div>
               <div class="info-row">
-                <span class="info-label">ปีการศึกษา</span>
+                <span class="info-label">ปีที่จบการศึกษา</span>
                 <span class="info-value"><?php echo $graduation_year ?></span>
               </div>
               <div class="info-row">
-                <span class="info-label">เกรดเฉลี่ย</span>
-                <span class="info-value">3.65</span>
+                <span class="info-label">สถานะการศึกษาต่อ</span>
+                <span class="info-value"><?php echo $status_education ?></span>
               </div>
               <div class="info-row">
                 <span class="info-label">ที่อยู่</span>
@@ -343,22 +340,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id'])) {
             </div>
           </div>
 
-          <!-- Skills -->
+          <!-- Job Information -->
           <div class="detail-card">
             <div class="detail-card-header">
-              <i class="fas fa-tools me-2"></i>ทักษะความสามารถ
+              <i class="fas fa-book me-2"></i>ข้อมูลการทำงาน
             </div>
             <div class="detail-card-body">
-              <span class="skill-badge">PHP</span>
-              <span class="skill-badge">JavaScript</span>
-              <span class="skill-badge">MySQL</span>
-              <span class="skill-badge">HTML/CSS</span>
-              <span class="skill-badge">Bootstrap</span>
-              <span class="skill-badge">React</span>
-              <span class="skill-badge">Node.js</span>
-              <span class="skill-badge">Python</span>
+              <div class="info-row">
+                <span class="info-label">ตำแหน่งงานปัจจุบัน</span>
+                <span class="info-value"><?php echo $current_job ?></span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">ชื่อสถานที่ทำงาน / บริษัท</span>
+                <span class="info-value"><?php echo $current_company ?></span>
+              </div>
+
+              <div class="info-row">
+                <span class="info-label">เงินเดือน</span>
+                <span class="info-value"><?php echo $current_salary ?></span>
+              </div>
             </div>
           </div>
+          
 
 
         </div>
@@ -401,28 +404,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id'])) {
               </div>
             </div>
           </div>
-
-          <!-- Certificates -->
-          <div class="detail-card">
-            <div class="detail-card-header">
-              <i class="fas fa-certificate me-2"></i>ใบประกาศนียบัตร/รางวัล
-            </div>
-            <div class="detail-card-body">
-              <div class="certificate-item">
-                <i class="fas fa-award text-primary me-2"></i>การพัฒนาเว็บไซต์ด้วย PHP
-              </div>
-              <div class="certificate-item">
-                <i class="fas fa-award text-primary me-2"></i>Microsoft Office Specialist
-              </div>
-              <div class="certificate-item">
-                <i class="fas fa-award text-primary me-2"></i>Google Analytics Individual Qualification
-              </div>
-              <div class="certificate-item">
-                <i class="fas fa-award text-primary me-2"></i>รางวัลโครงการดีเด่น ปีการศึกษา 2566
-              </div>
-            </div>
-          </div>
-
 
 
 

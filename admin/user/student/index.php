@@ -47,9 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
 <html lang="th">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <?php include '../../../includes/title.php'; ?>
     <link href="../../../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="../../../assets/css/bootstrap-icons.min.css" rel="stylesheet">
     <link href="../../../assets/css/style_admin.css" rel="stylesheet">
@@ -200,6 +198,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
                                 $image = !empty($item['image']) ? $item['image'] : "";
                                 $created_at = date('d/m/Y H:i', strtotime($item['created_at']));
 
+                                $address = $item['address'];
+                                $facebook = $item['facebook'];
+                                $instagram = $item['instagram'];
+                                $tiktok = $item['tiktok'];
+                                $line = $item['line'];
+
                                 $isset_image = $image != '' ? '../../../assets/images/user/student/' . $image : '../../../assets/images/user/no-image-profile.jpg';
                         ?>
                                 <tr>
@@ -225,7 +229,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
                                                 <?php echo $item['status_register']; ?>,
                                                 '<?php echo $image ?>', 
                                                 '<?php echo htmlspecialchars($created_at, ENT_QUOTES); ?>',
-                                                '<?php echo $isset_image ?>'
+                                                '<?php echo $isset_image ?>',
+                                                '<?php echo $address ?>',
+                                                '<?php echo $facebook ?>',
+                                                '<?php echo $instagram ?>',
+                                                '<?php echo $tiktok ?>',
+                                                '<?php echo $line ?>',
                                             )"
                                             data-bs-toggle="modal"
                                             data-bs-target="#modalManageData">
@@ -292,6 +301,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
                             </div>
 
                             <div class="col-md-8">
+                                <div class="detail-card-header mb-2">
+                                    <i class="fas fa-user me-2"></i>ข้อมูลส่วนตัว
+                                </div>
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">รหัสผู้ใช้งาน</label>
@@ -339,11 +351,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
                                 </div>
 
                                 <div class="mb-3">
+                                    <label class="form-label">ที่อยู่</label>
+                                    <textarea class="form-control" id="editAddress" name="address"></textarea>
+                                </div>
+
+                                <div class="mb-3">
                                     <label class="form-label">สถานะ</label>
                                     <select class="form-select" id="editStatus" name="status_register" required>
-                                        <option value="1">Approved</option>
-                                        <option value="2">Waiting for Approved</option>
-                                        <option value="0">Reject</option>
+                                        <option value="1">อณุญาติการใช้งาน</option>
+                                        <option value="2">รอดำเนินการอนุมัติ</option>
+                                        <option value="0">ระงับการใข้งาน</option>
                                     </select>
                                 </div>
 
@@ -351,8 +368,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
                                     <label class="form-label">วันที่เริ่มเป็นสมาขิก</label>
                                     <input type="text" class="form-control" id="editDateRegister" disabled name="date_register" required>
                                 </div>
+
+                                <hr>
+
+                                <div class="detail-card-header mb-2">
+                                    <i class="fas fa-address-book me-2"></i>ข้อมูลการติดต่อ
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Facebook ลิงค์</label>
+                                    <input type="text" class="form-control" id="editFacebook" name="facebook" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Instagram ลิงค์</label>
+                                    <input type="text" class="form-control" id="editInstagram" name="instagram" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Line ID ลิงค์</label>
+                                    <input type="text" class="form-control" id="editLine" name="line" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Tiktok ลิงค์</label>
+                                    <input type="text" class="form-control" id="editTiktok" name="tiktok" required>
+                                </div>
                             </div>
                         </div>
+
+
 
 
                     </form>
@@ -376,7 +421,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
     <script src="../../functions/delete_data.js"></script>
     <script src="../../functions/update_data.js"></script>
     <script>
-        function modalEditStudent(id, student_code, first_name, last_name, email, phone, education_level, status_register, image, created_at, issetImage) {
+        function modalEditStudent(id, student_code, first_name, last_name, email, phone, education_level, status_register, image, created_at, issetImage,
+                                  address, facebook, instagram, tiktok, line) {
             // กำหนดค่าให้กับฟอร์ม Edit Modal
             document.getElementById('editStudentId').value = id;
             document.getElementById('editStudentCode').value = student_code;
@@ -390,6 +436,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
 
             document.getElementById('imagePreview').src = issetImage;
             document.getElementById('currentImages').value = image;
+
+            document.getElementById('editAddress').value = address;
+            document.getElementById('editFacebook').value = facebook;
+            document.getElementById('editInstagram').value = instagram;
+            document.getElementById('editTiktok').value = tiktok;
+            document.getElementById('editLine').value = line;
         }
 
         const form = document.getElementById('editStudentForm');

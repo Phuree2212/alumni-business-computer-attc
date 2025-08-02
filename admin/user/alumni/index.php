@@ -49,9 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
 <html lang="th">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <?php include '../../../includes/title.php'; ?>
     <link href="../../../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="../../../assets/css/bootstrap-icons.min.css" rel="stylesheet">
     <link href="../../../assets/css/style_admin.css" rel="stylesheet">
@@ -363,7 +361,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
                                         <input type="tel" class="form-control" id="editPhone" name="phone" required>
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label">ระดับชั้นที่ศึกษาปัจจุบัน</label>
+                                        <label class="form-label">ระดับชั้นที่จบการศึกษา</label>
                                         <select class="form-select" name="education_level" id="editEducationLevel" required>
                                             <option value="">เลือกระดับชั้น</option>
                                             <option value="ปวช.3">ปวช.3</option>
@@ -396,9 +394,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
                                 <div class="mb-3">
                                     <label class="form-label">สถานะ</label>
                                     <select class="form-select" id="editStatus" name="status_register" required>
-                                        <option value="1">Approved</option>
-                                        <option value="2">Waiting for Approved</option>
-                                        <option value="0">Reject</option>
+                                        <option value="1">อณุญาติการใช้งาน</option>
+                                        <option value="2">รอดำเนินการอนุมัติ</option>
+                                        <option value="0">ระงับการใข้งาน</option>
                                     </select>
                                 </div>
 

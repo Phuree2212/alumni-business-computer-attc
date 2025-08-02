@@ -17,4 +17,9 @@ define('USER_TYPE_TEACHER', 4);
 define('GROUP_PUBLIC', 1);
 define('GROUP_SAME_YEAR', 2);
 
+//Status Report Problem
+define('STATUS_REPORT_NONE', 0);        // ไม่พบการใช้งานที่ไม่เหมาะสมของกระทู้นี้
+define('STATUS_REPORT_FOUND', 1);       // พบว่ามีการโพสต์ที่ไม่เหมาะสม
+define('STATUS_REPORT_PENDING', 2);     // รอดำเนินการตรวจสอบ
+
 ?>

@@ -20,6 +20,12 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
     $education_level = $_POST['education_level'];
     $status_register = $_POST['status_register'];
 
+    $address = $_POST['address'];
+    $facebook = $_POST['facebook'];
+    $instagram = $_POST['instagram'];
+    $line = $_POST['line'];
+    $tiktok = $_POST['tiktok'];
+
     $image = $_FILES['image'];
     $current_images = $_POST['current_images'];
     $deleted_images = $_POST['deleted_images'];
@@ -46,7 +52,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
         $new_image_files = $current_images;
     }
 
-    $result = $student->editStudent($id, $student_code, $first_name, $last_name, $email, $phone, $education_level, $status_register, $new_image_files);
+    $result = $student->editStudent($id, $student_code, $first_name, $last_name, $email, $phone, $education_level, $status_register, $new_image_files
+                                     ,$address, $facebook, $instagram, $line, $tiktok);
 
     echo json_encode($result);
     

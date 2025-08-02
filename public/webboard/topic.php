@@ -1,5 +1,45 @@
 <?php
-require_once '../../config/config.php';
+require_once '../../auth/auth_user.php';
+require_once '../../classes/webboard.php';
+require_once '../../config/function.php';
+
+$db = new Database();
+$conn = $db->connect();
+$webboard = new Webboard($conn);
+$comment = new CommentForum($conn);
+$like = new LikeForum($conn);
+$report = new ReportForum($conn);
+
+if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['id'])) {
+    //topic_details
+    $id = (int)$_GET['id'];
+    $topic_detail = $webboard->getTopic($id);
+    $title = $topic_detail['title'];
+    $content = $topic_detail['content'];
+    $string_image = $topic_detail['image'];
+    $images = explode(',', $topic_detail['image']);
+    $created_at = $topic_detail['created_at'];
+    $time_only = date("H:i", strtotime($created_at));
+
+
+    $like_count = $topic_detail['like_count'];
+
+    //user_detail_post
+    $user_id = $topic_detail['user_id'];
+    $fullname = $topic_detail['first_name'] . ' ' . $topic_detail['last_name'];
+    $image_profile = $topic_detail['profile'];
+    $user_type = $topic_detail['user_type'];
+
+    //comment_list
+    $comment_list = $comment->getCommentPost($id);
+
+    $is_topic_user = ($user_id == $_SESSION['user']['id'] && $user_type == $_SESSION['user']['user_type']);
+
+    //check_like_forum
+    $check_like_post = $like->checkLikePost($id, $_SESSION['user']['id'], $_SESSION['user']['user_type']);
+} else {
+    header('Location: index.php');
+}
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -9,6 +49,7 @@ require_once '../../config/config.php';
     <link href="../../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="../../assets/css/bootstrap-icons.min.css" rel="stylesheet">
     <link href="../../assets/css/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/sweetalert2.min.css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.8/css/all.css">
 </head>
 
@@ -50,7 +91,6 @@ require_once '../../config/config.php';
         position: relative;
         overflow: hidden;
         width: 100%;
-        max-height: 500px;
         margin-bottom: 30px
     }
 
@@ -251,6 +291,29 @@ require_once '../../config/config.php';
         font-size: 13px
     }
 
+    .post-author {
+        margin-bottom: 1rem;
+    }
+
+    .avatar img {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .media-body label {
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+        display: block;
+        color: #212529;
+    }
+
+    .media-body span {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+
     @media (max-width: 640px) {
         .blog-page .left-box .single-comment-box>ul>li {
             padding: 25px 0
@@ -287,56 +350,210 @@ require_once '../../config/config.php';
                 <div class="left-box">
                     <div class="card single_post">
                         <div class="body">
-                            <h3><a href="blog-details.html">All photographs are accurate</a></h3>
-                            <div class="img-post">
-                                <img class="d-block img-fluid" src="https://www.bootdey.com/image/800x280/87CEFA/000000" alt="First slide">
+                            <?php if (!empty($images[0])) { ?>
+                                <?php foreach ($images as $image) { ?>
+                                    <div class="img-post">
+                                        <img class="d-block img-fluid" src="../../assets/images/webboard/<?php echo $image ?>">
+                                    </div>
+                            <?php }
+                            } ?>
+
+                            <div class="post-author">
+
+                                <div class="d-flex">
+                                    <div class="dropdown position-absolute end-0">
+                                        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false" style="background: transparent; border: none; box-shadow: none;">
+                                            <i class="fas fa-ellipsis-v" style="font-size: 1rem; color: black;"></i>
+                                        </button>
+                                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#reportModal">รายงานปัญหากระทู้</a></li>
+                                            <?php if ($is_topic_user) { ?>
+                                                <li><a class="dropdown-item text-danger" id="DeleteComment" onclick="deleteTopic(<?php echo $id ?>, '<?php echo $string_image ?>')">ลบกระทู้</a></li>
+                                            <?php } ?>
+                                        </ul>
+                                    </div>
+                                    <div class="avatar me-3">
+                                        <img src="<?php
+                                                    echo !empty($image_profile)
+                                                        ? '../../assets/images/user/' .
+                                                        ($user_type == USER_TYPE_ALUMNI ? 'alumni' : 'student') .
+                                                        '/' . $image_profile
+                                                        : '../../assets/images/user/no-image-profile.jpg';
+                                                    ?>" alt="" title="">
+                                    </div>
+                                    <div class="media-body">
+                                        <label><?php echo $fullname; ?></label>
+                                        <span>โพสต์เมื่อ : <?php echo thaiDateFormat($created_at) . ' ' . $time_only ?></span>
+                                    </div>
+                                </div>
                             </div>
-                            <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</p>
+
+                            <h3><?php echo $title; ?></h3>
+                            <p><?php echo $content ?></p>
+
+                            <!-- like topic forum -->
+                            <div class="d-flex flex-wrap align-items-center gap-3 mt-4">
+
+                                <button onclick="likeTopic(<?php echo $id ?>)" id="likeButton" class="btn <?php echo $check_like_post ? 'btn-primary' : 'btn-outline-primary' ?>">
+                                    <i class="fas fa-thumbs-up"></i> ถูกใจ
+                                </button>
+
+
+                                <div>
+                                    <span id="likeCount"><?php echo $like_count ?></span> คนถูกใจ
+                                </div>
+
+
+
+                            </div>
+
                         </div>
+
                     </div>
                     <div class="card">
                         <div class="header">
-                            <h2>Comments 3</h2>
+                            <h2>ความคิดเห็น <?php echo count($comment_list) ?> รายการ</h2>
                         </div>
                         <div class="body">
+                            <!-- แสดงความคิดเห็น -->
+                            <form id="createComment">
+                                <div class="mb-3 d-flex flex-column gap-3">
+                                    <div>
+                                        <input type="hidden" value="<?php echo $id ?>" name="post_id">
+                                        <label for="form-control">เริ่มพูดคุยในกระดานสนทนา</label>
+                                        <textarea class="form-control" name="comment" rows="5" placeholder="เริ่มการสนทนาของคุณที่นี่..." id="commentContent"></textarea>
+                                        <div id="errorInput" class="invalid-feedback">กรุณากรอกข้อความ</div>
+                                    </div>
+                                    <div>
+                                        <button type="button" id="submitComment" class="btn btn-success">โพสต์</button>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <hr>
+
+                            <!-- รายการความคิดเห็น -->
                             <ul class="comment-reply list-unstyled">
-                                <li class="row clearfix">
-                                    <div class="icon-box col-md-2 col-4"><img class="img-fluid img-thumbnail" src="https://bootdey.com/img/Content/avatar/avatar7.png" alt="Awesome Image"></div>
-                                    <div class="text-box col-md-10 col-8 p-l-0 p-r0">
-                                        <h5 class="m-b-0">Gigi Hadid </h5>
-                                        <p>Why are there so many tutorials on how to decouple WordPress? how fast and easy it is to get it running (and keep it running!) and its massive ecosystem. </p>
-                                        <ul class="list-inline">
-                                            <li><a href="javascript:void(0);">Mar 09 2018</a></li>
-                                            <li><a href="javascript:void(0);">Reply</a></li>
-                                        </ul>
-                                    </div>
-                                </li>
-                                <li class="row clearfix">
-                                    <div class="icon-box col-md-2 col-4"><img class="img-fluid img-thumbnail" src="https://bootdey.com/img/Content/avatar/avatar3.png" alt="Awesome Image"></div>
-                                    <div class="text-box col-md-10 col-8 p-l-0 p-r0">
-                                        <h5 class="m-b-0">Christian Louboutin</h5>
-                                        <p>Great tutorial but few issues with it? If i try open post i get following errors. Please can you help me?</p>
-                                        <ul class="list-inline">
-                                            <li><a href="javascript:void(0);">Mar 12 2018</a></li>
-                                            <li><a href="javascript:void(0);">Reply</a></li>
-                                        </ul>
-                                    </div>
-                                </li>
-                                <li class="row clearfix">
-                                    <div class="icon-box col-md-2 col-4"><img class="img-fluid img-thumbnail" src="https://bootdey.com/img/Content/avatar/avatar4.png" alt="Awesome Image"></div>
-                                    <div class="text-box col-md-10 col-8 p-l-0 p-r0">
-                                        <h5 class="m-b-0">Kendall Jenner</h5>
-                                        <p>Very nice and informative article. In all the years I've done small and side-projects as a freelancer, I've ran into a few problems here and there.</p>
-                                        <ul class="list-inline">
-                                            <li><a href="javascript:void(0);">Mar 20 2018</a></li>
-                                            <li><a href="javascript:void(0);">Reply</a></li>
-                                        </ul>
-                                    </div>
-                                </li>
+                                <?php if (!empty($comment_list)) { ?>
+                                    <?php
+                                    $num = 0;
+                                    foreach ($comment_list as $item) {
+                                        $num += 1;
+                                        $comment_id = $item['comment_id'];
+                                        $user_comment = $item['first_name'] . ' ' . $item['last_name'];
+                                        $created_at = thaiDateFormat($item['created_at']) . ' ' . date("H:i", strtotime($item['created_at']));
+                                        $content_comment = $item['content'];
+                                        $user_id = $item['user_id'];
+
+
+                                        $image = $item['image'];
+                                        $user_type = $item['user_type'];
+                                        $user_path = $user_type == USER_TYPE_ALUMNI ? 'alumni' : 'student';
+
+                                        $path = '';
+
+                                        $is_comment_user = ($user_id == $_SESSION['user']['id'] && $user_type == $_SESSION['user']['user_type']);
+
+                                        if (empty($image)) {
+                                            $path = '../../assets/images/user/no-image-profile.jpg';
+                                        } else {
+                                            $path = '../../assets/images/user/' . $user_path . '/' . $image;
+                                        }
+                                    ?>
+
+                                        <li class="row position-relative">
+                                            <div class="dropdown position text-end">
+                                                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false" style="background: transparent; border: none; box-shadow: none;">
+                                                    <i class="fas fa-ellipsis-v" style="font-size: 1rem; color: black;"></i>
+                                                </button>
+                                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                                    <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#reportModal" onclick="openModalReport(<?php echo $comment_id ?>)">รายงานปัญหาความคิดเห็น</a></li>
+                                                    <?php if ($is_comment_user) { ?>
+                                                        <li><a class="dropdown-item text-danger" id="DeleteComment" onclick="deleteComment(<?php echo $comment_id ?>)">ลบความคิดเห็น</a></li>
+                                                    <?php } ?>
+                                                </ul>
+                                            </div>
+
+                                            <div class="icon-box col-auto d-flex align-items-center"><img class="rounded-circle img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;" src="<?php echo $path ?>"></div>
+                                            <div class="text-box col-8 p-l-0 p-r0">
+                                                <p><?php echo $user_comment ?></p>
+                                                <h5 class="m-b-0"><?php echo $content_comment ?></h5>
+                                                <ul class="list-inline">
+                                                    <li><a class="nav-link" href="javascript:void(0);"><?php echo $created_at ?></a></li>
+                                                    <li><a href="javascript:void(0);" onclick="replyComment('reply-form-<?php echo $num; ?>')">ตอบกลับ</a></li>
+                                                </ul>
+                                            </div>
+
+                                            <!-- Reply Form (Hidden by default) -->
+                                            <div id="reply-form-<?php echo $num; ?>" class="reply-section" style="display: none;">
+                                                <div class="reply-form">
+                                                    <form action="post" id="reply-comment-<?php echo $num ?>">
+                                                        <div class="d-flex flex-column ">
+                                                            <input type="hidden" name="post_id" value="<?php echo $id ?>">
+                                                            <input type="hidden" name="parent_comment_id" value="<?php echo $comment_id ?>">
+                                                            <textarea class="form-control mb-3" id="inputReplyComment" name="comment" rows="3" placeholder="เขียนการตอบกลับ..."></textarea>
+                                                            <div id="errorInputReplyComment" class="invalid-feedback">กรุณากรอกข้อความ</div>
+                                                            <div class="d-flex gap-2">
+                                                                <button type="button" onclick="submitReplyComment('reply-comment-<?php echo $num ?>')" class="btn btn-primary btn-sm">ตอบกลับ</button>
+                                                                <button type="button" onclick="closeReplyComment('reply-form-<?php echo $num; ?>')" class="btn btn-outline-secondary btn-sm">ยกเลิก</button>
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+
+                                            <!-- การตอบกลับความคิดเห็น -->
+                                            <?php $reply_comment_list = $comment->getReplyComment($id, $comment_id);
+                                            if (!empty($reply_comment_list)) { ?>
+                                                <?php
+                                                $num_reply = 0;
+                                                foreach ($reply_comment_list as $reply) {
+                                                    $num_reply += 1;
+                                                    $user_reply = $reply['first_name'] . ' ' . $reply['last_name'];
+                                                    $reply_comment = $reply['content'];
+                                                    $created_at_reply = thaiDateFormat($reply['created_at']) . ' ' . date("H:i", strtotime($reply['created_at']));
+
+                                                    $image_reply = $reply['image'];
+                                                    $user_type_reply = $reply['user_type'];
+                                                    $user_path_reply = $user_type_reply == USER_TYPE_ALUMNI ? 'alumni' : 'student';
+
+                                                    $path_reply = '';
+
+                                                    if (empty($image)) {
+                                                        $path_reply = '../../assets/images/user/no-image-profile.jpg';
+                                                    } else {
+                                                        $path_reply = '../../assets/images/user/' . $user_path_reply . '/' . $image_reply;
+                                                    }
+
+                                                ?>
+
+                                                    <div class="p-3 border rounded mt-3">
+                                                        <h7>การตอบกลับความคิดเห็นที่ <?php echo $num_reply ?></h7>
+                                                        <div class="row mt-2">
+                                                            <div class="icon-box col-auto d-flex align-items-center"><img class="rounded-circle img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;" src="<?php echo $path_reply ?>"></div>
+                                                            <div class="text-box col-8 p-l-0 p-r0">
+                                                                <p><?php echo $user_reply ?></p>
+                                                                <h6 class="m-b-0"><?php echo $reply_comment ?></h6>
+                                                                <ul class="list-inline">
+                                                                    <li><a class="nav-link" href="javascript:void(0);"><?php echo $created_at_reply ?></a></li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                            <?php }
+                                            } ?>
+
+
+                                        </li>
+                                        <hr>
+                                    <?php }
+                                } else { ?>
+                                    <div class="text-center text-danger py-4">ขณะนี้ยังไม่มีการพูดคุยในกระทู้นี้</div>
+                                <?php } ?>
                             </ul>
                         </div>
                     </div>
-                    
+
                 </div>
 
             </div>
@@ -344,9 +561,276 @@ require_once '../../config/config.php';
         </div>
     </div>
 
+    <!-- Modal Report Post -->
+    <div class="modal fade" id="reportModal" tabindex="-1" aria-hidden="true">
+        <form action="" id="formReport">
+            <input type="hidden" name="post_id" value="<?php echo $id ?>" id="postId">
+            <input type="hidden" name="comment_id" id="commentId">
+
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title" id="modalTitle">รายงานปัญหา</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <textarea name="reason" id="reportReason" required class="form-control" placeholder="เขียนปัญหาที่คุณพบเกี่ยวกับกระทู้ หรือ ความคิดเห็น นี้ เช่น การใช้ถ้อยคำที่ไม่เหมาะสม ..."></textarea>
+                        <div id="errorInputReport" class="invalid-feedback">กรุณากรอกข้อความ</div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                        <button type="button" id="submitReport" class="btn btn-primary">ยืนยันการรายงานปัญหา</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
     <?php include '../../includes/footer.php' ?>
 
     <script src="../../assets/js/bootstrap.min.js"></script>
+    <script src="../../assets/alerts/modal.js"></script>
+    <script src="../../assets/js/sweetalert2.all.min.js"></script>
 </body>
+<script>
+    const btnSubmitComment = document.getElementById('submitComment');
+    const btnSubmitReport = document.getElementById('submitReport');
+    const btnSubmitReplyComment = document.getElementById('submitReplyComment');
+
+    //ตอบกลับความคิดเห็น
+    function submitReplyComment(formId) {
+        const formElement = document.getElementById(formId);
+        const replyCommentInput = formElement.querySelector('#inputReplyComment');
+        const errorInput = formElement.querySelector('#errorInputReplyComment');
+
+        const formData = new FormData(formElement);
+        const formUrl = new URLSearchParams(formData);
+
+        if (!replyCommentInput.value.trim()) {
+            replyCommentInput.classList.add('is-invalid');
+            errorInput.textContent = 'กรุณากรอกข้อมูล';
+            return;
+        } else {
+            replyCommentInput.classList.remove('is-invalid');
+            errorInput.textContent = '';
+        }
+
+        fetch('create_comment.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: formUrl
+            })
+            .then(response => response.json())
+            .then(response => {
+                if (response.result === true) {
+                    modalAlert('ตอบกลับความคิดเห็นสำเร็จ', 'ตอบกลับความคิดเห็นสำเร็จ', 'success')
+                        .then(() => location.reload());
+                } else {
+                    modalAlert('ตอบกลับความคิดเห็นไม่สำเร็จ เกิดข้อผิดพลาดขึ้น', response.message, 'error');
+                }
+            })
+            .catch(error => {
+                modalAlert('การเชื่อมต่อล้มเหลว', 'ไม่สามารถติดต่อกับเซิร์ฟเวอร์ได้', 'error');
+                console.error('Fetch error:', error);
+            });
+    }
+
+    //ส่งรายงานปัญหา
+    btnSubmitReport.addEventListener('click', () => {
+        const reportInput = document.getElementById('reportReason');
+        const errorInput = document.getElementById('errorInputReport');
+
+        if (!reportInput.value.trim()) {
+            reportInput.classList.add('is-invalid');
+            errorInput.textContent = 'กรุณากรอกข้อมูล';
+            return;
+        }
+
+        const form = document.getElementById('formReport');
+        const formData = new FormData(form);
+        const formUrl = new URLSearchParams(formData);
+
+        modalConfirm('ยืนยันการรายงานปัญหา', 'คุณต้องการรายงานปัญหาเกี่ยวกับกระทู้นี้ใช่ไหม?')
+            .then(result => {
+                if (result.isConfirmed) {
+                    fetch('send_report.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            },
+                            body: formUrl
+                        })
+                        .then(response => response.json())
+                        .then(response => {
+                            if (response.result) {
+                                modalAlert('รายงานปัญหาสำเร็จ', 'รายงานปัญหาสำเร็จ', 'success')
+                                    .then(() => location.reload());
+                            } else {
+                                modalAlert('รายงานปัญหาไม่สำเร็จ เกิดข้อผิดพลาดขึ้น', response.message, 'error');
+                            }
+                        })
+                        .catch(error => {
+                            modalAlert('การเชื่อมต่อล้มเหลว', 'ไม่สามารถติดต่อกับเซิร์ฟเวอร์ได้', 'error');
+                            console.error('Fetch error:', error);
+                        });
+                }
+
+            })
+    })
+
+    //แสดงความคิดเห็น
+    btnSubmitComment.addEventListener('click', () => {
+        const commentInput = document.getElementById('commentContent');
+        const errorInput = document.getElementById('errorInput');
+
+        const form = document.getElementById('createComment');
+        const formData = new FormData(form);
+
+        if (!commentInput.value.trim()) {
+            commentInput.classList.add('is-invalid');
+            errorInput.textContent = 'กรุณากรอกข้อมูล';
+            return;
+        }
+
+        fetch('create_comment.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(response => {
+                if (response.result === true) {
+                    modalAlert('แสดงความคิดเห็นสำเร็จ', 'แสดงความคิดเห็นสำเร็จ', 'success')
+                        .then(() => location.reload());
+                } else {
+                    modalAlert('แสดงความคิดเห็นไม่สำเร็จ เกิดข้อผิดพลาดขึ้น', response.message, 'error');
+                }
+            })
+            .catch(error => {
+                modalAlert('การเชื่อมต่อล้มเหลว', 'ไม่สามารถติดต่อกับเซิร์ฟเวอร์ได้', 'error');
+                console.error('Fetch error:', error);
+            });
+    });
+
+    function deleteComment(commentId) {
+        modalConfirm('ยืนยันการลบความคิดเห็น', 'คุณต้องการลบความคิดเห็นของท่านช่ไหม?')
+            .then(result => {
+                if (result.isConfirmed) {
+                    fetch('delete_comment.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            },
+                            body: 'comment_id=' + commentId
+                        })
+                        .then(response => response.json())
+                        .then(response => {
+                            if (response.result) {
+                                modalAlert('ลบความคิดเห็นสำเร็จ', 'ลบความคิดเห็นสำเร็จ', 'success')
+                                    .then(() => location.reload());
+                            } else {
+                                modalAlert('ลบความคิดเห็นไม่สำเร็จ เกิดข้อผิดพลาดขึ้น', response.message, 'error');
+                            }
+                        })
+                        .catch(error => {
+                            modalAlert('การเชื่อมต่อล้มเหลว', 'ไม่สามารถติดต่อกับเซิร์ฟเวอร์ได้', 'error');
+                            console.error('Fetch error:', error);
+                        });
+                }
+
+            })
+    }
+
+    function deleteTopic(id, stringImage) {
+        modalConfirm('ยืนยันการลบกระทู้', 'คุณต้องการลบกระทู้ของท่านใช่ไหม?')
+            .then(result => {
+                if (result.isConfirmed) {
+                    fetch('delete_topic.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            },
+                            body: 'id=' + id + '&image=' + stringImage
+                        })
+                        .then(response => response.json())
+                        .then(response => {
+                            if (response.result) {
+                                modalAlert('ลบกระทู้สำเร็จ', 'ลบกระทู้สำเร็จ', 'success')
+                                    .then(() => location.reload());
+                            } else {
+                                modalAlert('ลบกระทู้ไม่สำเร็จ เกิดข้อผิดพลาดขึ้น', response.message, 'error');
+                            }
+                        })
+                        .catch(error => {
+                            modalAlert('การเชื่อมต่อล้มเหลว', 'ไม่สามารถติดต่อกับเซิร์ฟเวอร์ได้', 'error');
+                            console.error('Fetch error:', error);
+                        });
+                }
+
+            })
+    }
+
+
+    //ถูกใจกระทู้ & ยกเลิกการถูกใจ
+    function likeTopic(post_id) {
+        const btnLike = document.getElementById('likeButton');
+        const numberLike = document.getElementById('likeCount');
+
+        let action = '';
+
+        if (btnLike.classList.contains('btn-outline-primary')) {
+            btnLike.classList.remove('btn-outline-primary');
+            btnLike.classList.add('btn-primary');
+            numberLike.textContent = Number(numberLike.textContent) + 1;
+            action = 'like';
+        } else {
+            btnLike.classList.remove('btn-primary');
+            btnLike.classList.add('btn-outline-primary');
+            numberLike.textContent = Number(numberLike.textContent) - 1;
+            action = 'unlike';
+        }
+
+        fetch('like_post.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'post_id=' + encodeURIComponent(post_id) + '&action=' + action
+            })
+            .then(response => response.json())
+            .then(response => {
+                console.log('กำลังประมวลผล');
+                if (!response.result) {
+                    modalAlert('ไม่สามารถถูกใจกระทู้นี้ได้', 'เกิดข้อผิดพลาดขึ้นกับคำขอ', 'error');
+                }
+            })
+            .catch(error => {
+                modalAlert('การเชื่อมต่อล้มเหลว', 'ไม่สามารถติดต่อกับเซิร์ฟเวอร์ได้', 'error');
+                console.error('Fetch error:', error);
+            })
+            .finally(() => {
+                console.log('กระทำสำเร็จ');
+            });
+    }
+
+    function openModalReport(commentId) {
+        document.getElementById('commentId').value = commentId;;
+    }
+
+    function closeModalReport(commentId) {
+        document.getElementById('commentId').value = '';;
+    }
+
+    function replyComment(idTag) {
+        const elementReplyForm = document.getElementById(idTag);
+        elementReplyForm.style.display = 'block';
+    }
+
+    function closeReplyComment(idTag) {
+        const elementReplyForm = document.getElementById(idTag);
+        elementReplyForm.style.display = 'none';
+    }
+</script>
 
 </html>

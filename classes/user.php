@@ -9,6 +9,14 @@ class User
         $this->conn = $db;
     }
 
+    public function countUser()
+    {
+        $stmt = $this->conn->prepare("SELECT COUNT(*) FROM {$this->table}");
+        $stmt->execute();
+
+        return $stmt->fetchColumn();
+    }
+    
     public function checkStatusRegisterUser($data)
     {
         $sql = "SELECT status_register FROM {$this->table} WHERE";

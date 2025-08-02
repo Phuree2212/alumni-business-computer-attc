@@ -1,9 +1,24 @@
 <?php
 require_once '../auth/auth_admin.php';
 require_once '../classes/user.php';
+require_once '../classes/visitor_tracker.php';
+require_once '../classes/webboard.php';
 
 $db = new Database();
 $conn = $db->connect();
+
+$visitor_tracker = new VisitorTracker($conn);
+$view_count = $visitor_tracker->countViewWebsite(); 
+
+$user = new User($conn);
+$user_count = $user->countUser();
+
+$webboard = new Webboard($conn);
+$count_forum = $webboard->getTotalCount();
+
+$comment = new CommentForum($conn);
+$count_comment = $comment->getTotalCountComment();
+
 $user_approval = new UserApproval($conn);
 $user_approval_list = $user_approval->getRegisterWaiingApprove(10, 0);
 
@@ -13,9 +28,7 @@ $user_approval_list = $user_approval->getRegisterWaiingApprove(10, 0);
 <html lang="th">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard</title>
+  <?php include '../includes/title.php'; ?>
   <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
   <link href="../assets/css/bootstrap-icons.min.css" rel="stylesheet">
   <link href="../assets/css/style_admin.css" rel="stylesheet">
@@ -225,12 +238,8 @@ $user_approval_list = $user_approval->getRegisterWaiingApprove(10, 0);
           <div class="icon">
             <i class="fas fa-users"></i>
           </div>
-          <h3>254,487</h3>
+          <h3><?php echo $view_count ?></h3>
           <div class="label">ผู้เยี่ยมชมเว็บไซต์</div>
-          <div class="trend up">
-            <i class="fas fa-arrow-up"></i>
-            <span>7% เพิ่มขึ้นจากเมื่อวาน</span>
-          </div>
         </div>
       </div>
 
@@ -239,12 +248,24 @@ $user_approval_list = $user_approval->getRegisterWaiingApprove(10, 0);
           <div class="icon">
             <i class="fas fa-user"></i>
           </div>
-          <h3>2,000</h3>
+          <h3><?php echo $user_count ?></h3>
           <div class="label">สมาชิกในเว็บไซต์</div>
-          <div class="trend up">
-            <i class="fas fa-shopping-bag"></i>
-            <span>954 ขายในเดือนนี้</span>
+        </div>
+      </div>
+
+      <div class="col-xl-3 col-md-6 mb-4">
+        <div class="stats-card success">
+          <div class="icon">
+            <i class="fas fa-user"></i>
           </div>
+          <h3><?php echo $count_forum ?></h3>
+          <div class="label">กระทู้</div>
+            <!--
+            <div class="trend up">
+              <i class="fas fa-exclamation-circle"></i>
+              <span>154 รอการอนุมัติ</span>
+            </div>
+            -->
         </div>
       </div>
 
@@ -253,28 +274,11 @@ $user_approval_list = $user_approval->getRegisterWaiingApprove(10, 0);
           <div class="icon">
             <i class="fas fa-comments"></i>
           </div>
-          <h3>873</h3>
+          <h3><?php echo $count_comment ?></h3>
           <div class="label">ความคิดเห็น</div>
-          <div class="trend up">
-            <i class="fas fa-exclamation-circle"></i>
-            <span>154 รอการอนุมัติ</span>
-          </div>
         </div>
       </div>
 
-      <div class="col-xl-3 col-md-6 mb-4">
-        <div class="stats-card danger">
-          <div class="icon">
-            <i class="fas fa-user"></i>
-          </div>
-          <h3>12</h3>
-          <div class="label">คำขอลงทะเบียนใหม่</div>
-          <div class="trend up">
-            <i class="fas fa-chart-line"></i>
-            <span>$22,675 รายได้รวม</span>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- User Table -->
