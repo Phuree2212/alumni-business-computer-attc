@@ -1,6 +1,6 @@
 <?php 
 header('Content-Type: application/json');
-require_once '../../auth/auth_user.php';
+require_once '../../auth/auth_all.php';
 require_once '../../classes/webboard.php';
 require_once '../../classes/image_uploader.php';
 

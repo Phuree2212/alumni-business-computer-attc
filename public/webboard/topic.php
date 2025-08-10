@@ -1,5 +1,5 @@
 <?php
-require_once '../../auth/auth_user.php';
+require_once '../../auth/auth_all.php';
 require_once '../../classes/webboard.php';
 require_once '../../config/function.php';
 
@@ -13,15 +13,19 @@ $report = new ReportForum($conn);
 if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['id'])) {
     //topic_details
     $id = (int)$_GET['id'];
-    $topic_detail = $webboard->getTopic($id);
+
+    if(!$topic_detail = $webboard->getTopic($id)){
+        echo "<script>alert('ไม่พบข้อมูลกระทู้')</script>";
+        echo "<script>window.location.href='index.php'</script>";
+        exit;
+    }
+
     $title = $topic_detail['title'];
     $content = $topic_detail['content'];
     $string_image = $topic_detail['image'];
     $images = explode(',', $topic_detail['image']);
     $created_at = $topic_detail['created_at'];
     $time_only = date("H:i", strtotime($created_at));
-
-
     $like_count = $topic_detail['like_count'];
 
     //user_detail_post
@@ -29,6 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['id'])) {
     $fullname = $topic_detail['first_name'] . ' ' . $topic_detail['last_name'];
     $image_profile = $topic_detail['profile'];
     $user_type = $topic_detail['user_type'];
+
+    $user_path = $topic_detail['user_type'] == USER_TYPE_ALUMNI ? 'alumni' : ($topic_detail['user_type'] == USER_TYPE_STUDENT ? 'student' : ($topic_detail['user_type'] == USER_TYPE_ADMIN ? 'admin' : 'teacher'));
 
     //comment_list
     $comment_list = $comment->getCommentPost($id);
@@ -95,26 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['id'])) {
     }
 
     .single_post .img-post>img {
-        -webkit-transform: scale(1);
-        -ms-transform: scale(1);
-        transform: scale(1);
-        opacity: 1;
-        -webkit-transition: -webkit-transform .4s ease, opacity .4s ease;
-        transition: transform .4s ease, opacity .4s ease;
         width: 100%;
-        filter: none;
-        -webkit-filter: grayscale(0);
-        -webkit-transform: scale(1.01)
-    }
-
-    .single_post .img-post:hover img {
-        -webkit-transform: scale(1.02);
-        -ms-transform: scale(1.02);
-        transform: scale(1.02);
-        opacity: .7;
-        filter: gray;
-        -webkit-filter: grayscale(1);
-        -webkit-transition: all .8s ease-in-out
     }
 
     .single_post .img-post:hover .social_share {
@@ -367,7 +354,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['id'])) {
                                         </button>
                                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                                             <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#reportModal">รายงานปัญหากระทู้</a></li>
-                                            <?php if ($is_topic_user) { ?>
+                                            <?php if ($is_topic_user || $_SESSION['user']['user_type'] == USER_TYPE_ADMIN) { ?>
                                                 <li><a class="dropdown-item text-danger" id="DeleteComment" onclick="deleteTopic(<?php echo $id ?>, '<?php echo $string_image ?>')">ลบกระทู้</a></li>
                                             <?php } ?>
                                         </ul>
@@ -376,13 +363,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['id'])) {
                                         <img src="<?php
                                                     echo !empty($image_profile)
                                                         ? '../../assets/images/user/' .
-                                                        ($user_type == USER_TYPE_ALUMNI ? 'alumni' : 'student') .
+                                                        $user_path .
                                                         '/' . $image_profile
                                                         : '../../assets/images/user/no-image-profile.jpg';
                                                     ?>" alt="" title="">
                                     </div>
                                     <div class="media-body">
-                                        <label><?php echo $fullname; ?></label>
+                                        <?php if ($user_type == USER_TYPE_ADMIN) { ?>
+                                            <h6 class="text-danger"><i class="fa fa-user"></i> ตั้งกระทู้โดย : ผู้ดูแลระบบ</h6>
+                                        <?php }
+                                        if ($user_type == USER_TYPE_TEACHER) { ?>
+                                            <h6 class="text-danger"><i class="fa fa-user"></i> ตั้งกระทู้โดย : คุณครู/อาจารย์</h6>
+                                        <?php } ?>
+
+                                        <!--แสดงชื่อผู้ใช้ โดยให้ดูรายละเอียดของผู้ใชอื่นได้ ยกเว้น แอดมิน และ ครู -->
+                                        <?php if ($user_type != USER_TYPE_TEACHER && $user_type != USER_TYPE_ADMIN) { ?>
+                                            <label><a class="nav-link" href="profile.php?id=<?php echo $user_id ?>"><?php echo $fullname; ?></a></label>
+                                        <?php } else { ?>
+                                            <label><?php echo $fullname; ?></label>
+                                        <?php } ?>
+
                                         <span>โพสต์เมื่อ : <?php echo thaiDateFormat($created_at) . ' ' . $time_only ?></span>
                                     </div>
                                 </div>
@@ -425,7 +425,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['id'])) {
                                         <div id="errorInput" class="invalid-feedback">กรุณากรอกข้อความ</div>
                                     </div>
                                     <div>
-                                        <button type="button" id="submitComment" class="btn btn-success">โพสต์</button>
+                                        <button type="button" id="submitComment" class="btn btn-success">แสดงความคิดเห็น</button>
                                     </div>
                                 </div>
                             </form>
@@ -448,10 +448,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['id'])) {
 
                                         $image = $item['image'];
                                         $user_type = $item['user_type'];
-                                        $user_path = $user_type == USER_TYPE_ALUMNI ? 'alumni' : 'student';
+                                        $user_path = $user_type == USER_TYPE_ALUMNI ? 'alumni' : ($user_type == USER_TYPE_STUDENT ? 'student' : ($user_type == USER_TYPE_ADMIN ? 'admin' : 'teacher'));
 
                                         $path = '';
 
+                                        //เช็คว่าใช่ comment ของ user ที่ login อยู่หรือไม่
                                         $is_comment_user = ($user_id == $_SESSION['user']['id'] && $user_type == $_SESSION['user']['user_type']);
 
                                         if (empty($image)) {
@@ -468,7 +469,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['id'])) {
                                                 </button>
                                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                                                     <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#reportModal" onclick="openModalReport(<?php echo $comment_id ?>)">รายงานปัญหาความคิดเห็น</a></li>
-                                                    <?php if ($is_comment_user) { ?>
+                                                    <?php if ($is_comment_user || $_SESSION['user']['user_type'] == USER_TYPE_ADMIN) { ?>
                                                         <li><a class="dropdown-item text-danger" id="DeleteComment" onclick="deleteComment(<?php echo $comment_id ?>)">ลบความคิดเห็น</a></li>
                                                     <?php } ?>
                                                 </ul>
@@ -476,7 +477,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['id'])) {
 
                                             <div class="icon-box col-auto d-flex align-items-center"><img class="rounded-circle img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;" src="<?php echo $path ?>"></div>
                                             <div class="text-box col-8 p-l-0 p-r0">
-                                                <p><?php echo $user_comment ?></p>
+                                                <?php if ($user_type == USER_TYPE_ADMIN) { ?>
+                                                    <h5 class="text-danger"><i class="fa fa-user"></i> ตอบกลับโดยผู้ดูแลระบบ</h5>
+                                                <?php }
+                                                if ($user_type == USER_TYPE_TEACHER) { ?>
+                                                    <h5 class="text-danger"><i class="fa fa-user"></i> ตอบกลับโดยคุณครู / อาจารย์</h5>
+                                                <?php } ?>
+
+                                                <!--แสดงชื่อผู้ใช้ โดยให้ดูรายละเอียดของผู้ใชอื่นได้ ยกเว้น แอดมิน และ ครู -->
+                                                <?php if ($user_type != USER_TYPE_TEACHER && $user_type != USER_TYPE_ADMIN) { ?>
+                                                    <p><a class="nav-link" href="profile.php?id=<?php echo $user_id ?>"><?php echo $user_comment; ?></a></p>
+                                                <?php } else { ?>
+                                                    <p><?php echo $user_comment; ?></p>
+                                                <?php } ?>
+
                                                 <h5 class="m-b-0"><?php echo $content_comment ?></h5>
                                                 <ul class="list-inline">
                                                     <li><a class="nav-link" href="javascript:void(0);"><?php echo $created_at ?></a></li>
@@ -515,9 +529,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['id'])) {
 
                                                     $image_reply = $reply['image'];
                                                     $user_type_reply = $reply['user_type'];
-                                                    $user_path_reply = $user_type_reply == USER_TYPE_ALUMNI ? 'alumni' : 'student';
+                                                    $user_path_reply = $user_type_reply == USER_TYPE_ALUMNI ? 'alumni' : ($user_type_reply == USER_TYPE_STUDENT ? 'student' : ($user_type_reply == USER_TYPE_ADMIN ? 'admin' : 'teacher'));
 
                                                     $path_reply = '';
+
+                                                    $is_comment_reply_user = ($reply['user_id'] == $_SESSION['user']['id'] && $reply['user_type'] == $_SESSION['user']['user_type']);
 
                                                     if (empty($image)) {
                                                         $path_reply = '../../assets/images/user/no-image-profile.jpg';
@@ -529,10 +545,36 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['id'])) {
 
                                                     <div class="p-3 border rounded mt-3">
                                                         <h7>การตอบกลับความคิดเห็นที่ <?php echo $num_reply ?></h7>
+
+                                                        <div class="dropdown position-absolute end-0">
+                                                            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false" style="background: transparent; border: none; box-shadow: none;">
+                                                                <i class="fas fa-ellipsis-v" style="font-size: 1rem; color: black;"></i>
+                                                            </button>
+                                                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#reportModal">รายงานปัญหาความคิดเห็น</a></li>
+                                                                <?php if ($is_comment_reply_user || $_SESSION['user']['user_type'] == USER_TYPE_ADMIN) { ?>
+                                                                    <li><a class="dropdown-item text-danger" id="DeleteComment" onclick="deleteComment(<?php echo $reply['comment_id'] ?>)">ลบการตอบกลับความคิดเห็น</a></li>
+                                                                <?php } ?>
+                                                            </ul>
+                                                        </div>
+
                                                         <div class="row mt-2">
                                                             <div class="icon-box col-auto d-flex align-items-center"><img class="rounded-circle img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;" src="<?php echo $path_reply ?>"></div>
                                                             <div class="text-box col-8 p-l-0 p-r0">
-                                                                <p><?php echo $user_reply ?></p>
+                                                                <?php if ($user_type_reply == USER_TYPE_ADMIN) { ?>
+                                                                    <h6 class="text-danger"><i class="fa fa-user"></i> ตอบกลับโดยผู้ดูแลระบบ</h6>
+                                                                <?php }
+                                                                if ($user_type_reply == USER_TYPE_TEACHER) { ?>
+                                                                    <h6 class="text-danger"><i class="fa fa-user"></i> ตอบกลับโดยคุณครู / อาจารย์</h6>
+                                                                <?php } ?>
+
+                                                                <!--แสดงชื่อผู้ใช้ โดยให้ดูรายละเอียดของผู้ใชอื่นได้ ยกเว้น แอดมิน และ ครู -->
+                                                                <?php if ($user_type != USER_TYPE_TEACHER && $user_type != USER_TYPE_ADMIN) { ?>
+                                                                    <p><a class="nav-link" href="profile.php?id=<?php echo $user_id ?>"><?php echo $user_reply; ?></a></p>
+                                                                <?php } else { ?>
+                                                                    <p><?php echo $user_reply; ?></p>
+                                                                <?php } ?>
+
                                                                 <h6 class="m-b-0"><?php echo $reply_comment ?></h6>
                                                                 <ul class="list-inline">
                                                                     <li><a class="nav-link" href="javascript:void(0);"><?php echo $created_at_reply ?></a></li>
@@ -757,7 +799,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['id'])) {
                         .then(response => {
                             if (response.result) {
                                 modalAlert('ลบกระทู้สำเร็จ', 'ลบกระทู้สำเร็จ', 'success')
-                                    .then(() => location.reload());
+                                    .then(() => window.location.href='index.php');
                             } else {
                                 modalAlert('ลบกระทู้ไม่สำเร็จ เกิดข้อผิดพลาดขึ้น', response.message, 'error');
                             }

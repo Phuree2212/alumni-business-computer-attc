@@ -174,8 +174,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($start_d
                         <tr>
                             <th>ลำดับ</th>
                             <th>หัวข้อ</th>
-                            <th class="text-center" style="width: 20%;">เนื้อหา</th>
+                            <th class="text-center" style="width: 15%;">เนื้อหา</th>
                             <th class="text-center">รูปภาพ</th>
+                            <th class="text-center">ความคิดเห็น</th>
                             <th class="text-center">ประเภทกระทู้</th>
                             <th>โพสต์โดย</th>
                             <th>ประเภทผู้ใช้งาน</th>
@@ -197,6 +198,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($start_d
                                 $created_by = $item['first_name'] . ' ' . $item['last_name'];
                                 $user_type = $item['user_type'] == USER_TYPE_ALUMNI ? 'ศิษย์เก่า' : 'นักเรียน นักศึกษา';
                                 $created_at = date('d/m/Y H:i', strtotime($item['created_at']));
+
+                                $comment_count = $item['comment_count'];
                         ?>
                                 <tr>
                                     <td>
@@ -211,6 +214,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($start_d
                                             <?= 'ไม่มีรูปภาพ'; ?>
                                         <?php } ?>
                                     </td>
+                                    <td><?= $comment_count ?> รายการ <a target="_blank" href="comment.php?id=<?php echo $id ?>">ดู</a></td>
                                     <td><?= $group_type ?></td>
                                     <td><?= $created_by ?></td>
                                     <td><?= $user_type ?></td>

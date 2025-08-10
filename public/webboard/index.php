@@ -1,5 +1,5 @@
 <?php
-require_once '../../auth/auth_user.php';
+require_once '../../auth/auth_all.php';
 require_once '../../classes/webboard.php';
 require_once '../../classes/pagination_helper.php';
 require_once '../../config/function.php';
@@ -54,8 +54,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($start_d
   );
 }
 
-if(isset($_GET['forum_me']) && $_GET['forum_me'] == 'true'){
-   // นับจำนวนรายการทั้งหมด
+if (isset($_GET['forum_me']) && $_GET['forum_me'] == 'true') {
+  // นับจำนวนรายการทั้งหมด
   $totalItems = $webboard->countTopicMe($_SESSION['user']['id'], $_SESSION['user']['user_type']);
 
   // สร้าง pagination
@@ -298,16 +298,23 @@ if(isset($_GET['forum_me']) && $_GET['forum_me'] == 'true'){
 
             <!-- Navigation Menu -->
             <nav class="nav nav-pills flex-column">
-              <a href="index.php" class="nav-link">
-                <i class="fas fa-list me-2"></i>รวมกระทู้สาธารณะทั้งหมด
+              <!-- ลิงก์: รวมกระทู้สาธารณะทั้งหมด -->
+              <?php
+              $isActive = basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) == 'index.php'
+                && empty($_SERVER['QUERY_STRING']);
+              ?>
+              <a href="index.php" class="nav-link <?php echo $isActive ? 'active' : ''; ?>">
+                <i class="fab fa-forumbee me-2"></i>รวมกระทู้สาธารณะทั้งหมด
               </a>
-              <?php if($_SESSION['user']['user_type'] == USER_TYPE_ALUMNI){ ?>
-                <a href="index.php?year_group=<?php echo $_SESSION['user']['graduation_year'] ?>" class="nav-link">
-                  <i class="fas fa-fire me-2"></i>กระทู้ในรุ่นปีการศึกษา <?php echo $_SESSION['user']['graduation_year'] ?>
+              <!-- ลิงก์: กระทู้ในรุ่นปีการศึกษา -->
+              <?php if ($_SESSION['user']['user_type'] == USER_TYPE_ALUMNI) { ?>
+                <a href="index.php?year_group=<?php echo $_SESSION['user']['graduation_year'] ?>" class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], 'year_group=' . $_SESSION['user']['graduation_year']) !== false) ? 'active' : ''; ?>">
+                  <i class="fa fa-users me-2"></i>กระทู้ในรุ่นปีการศึกษา <?php echo $_SESSION['user']['graduation_year'] ?>
                 </a>
               <?php } ?>
-              <a href="index.php?forum_me=true" class="nav-link">
-                <i class="fas fa-list me-2"></i>กระทู้ของฉัน
+              <!-- ลิงก์: กระทู้ของฉัน -->
+              <a href="index.php?forum_me=true" class="nav-link <?php echo strpos($_SERVER['REQUEST_URI'], 'forum_me=true') !== false ? 'active' : ''; ?>">
+                <i class="fas fa-comments me-2"></i>กระทู้ของฉัน
               </a>
             </nav>
           </div>
@@ -341,9 +348,14 @@ if(isset($_GET['forum_me']) && $_GET['forum_me'] == 'true'){
               <?php if (!empty($topic_posts)) { ?>
                 <?php foreach ($topic_posts as $item) {
                   $id = $item['post_id'];
+                  $user_id = $item['user_id'];
                   $fullname = $item['first_name'] . ' ' . $item['last_name'];
-                  $path_image = '../../assets/images/user/';
-                  $path_user = ($item['user_type'] == USER_TYPE_ALUMNI ? 'alumni' : 'student') . '/' . $item['profile'];
+
+                  $path_image = '../../assets/images/user/'; //หากไม่มีรูปภาพ
+
+                  //Set Folder ตามประเภทผู้ใช้งาน
+                  $user_path_string = $item['user_type'] == USER_TYPE_ALUMNI ? 'alumni' : ($item['user_type'] == USER_TYPE_STUDENT ? 'student' : ($item['user_type'] == USER_TYPE_ADMIN ? 'admin' : 'teacher'));
+                  $path_user = $user_path_string . '/' . $item['profile'];
                   $path = $path_image . $path_user;
 
                   $like_count = $item['like_count'];
@@ -371,8 +383,20 @@ if(isset($_GET['forum_me']) && $_GET['forum_me'] == 'true'){
                                 <img src="<?php echo !empty($item['profile']) ? $path : '../../assets/images/user/no-image-profile.jpg' ?>" class="rounded-circle forum-avatar" alt="User" />
                               </div>
                               <div class="d-flex flex-column media-body">
-                                <label><?php echo $fullname; ?></label>
-                                <span style="font-size: 0.875rem; color: #6c757d;">ประเภทผู้ใช้งาน : <?php echo $item['user_type'] == USER_TYPE_ALUMNI ? 'ศิษย์เก่า' : 'นักเรียน นักศึกษา' ?></span>
+                                <?php if ($item['user_type'] == USER_TYPE_ADMIN) { ?>
+                                  <h6 class="text-danger"><i class="fa fa-user"></i> ตั้งกระทู้โดย : ผู้ดูแลระบบ</h6>
+                                <?php }
+                                if ($item['user_type'] == USER_TYPE_TEACHER) { ?>
+                                  <h6 class="text-danger"><i class="fa fa-user"></i> ตั้งกระทู้โดย : คุณครู/อาจารย์</h6>
+                                <?php } ?>
+
+                                <?php if ($item['user_type'] != USER_TYPE_TEACHER && $item['user_type'] != USER_TYPE_ADMIN) { ?>
+                                  <label><a class="nav-link" href="profile.php?id=<?php echo $user_id ?>"><?php echo $fullname; ?></a></label>
+                                <?php } else { ?>
+                                  <label><?php echo $fullname; ?></label>
+                                <?php } ?>
+
+                                <span style="font-size: 0.875rem; color: #6c757d;">ประเภทผู้ใช้งาน : <?php echo $item['user_type'] == USER_TYPE_ALUMNI ? 'ศิษย์เก่า' : ($item['user_type'] == USER_TYPE_STUDENT ? 'นักเรียน/นักศึกษา' : ($item['user_type'] == USER_TYPE_ADMIN ? 'ผู้ดูแลระบบ' : 'คุณครู/อาจารย์')); ?></span>
                               </div>
                             </div>
 
@@ -451,10 +475,14 @@ if(isset($_GET['forum_me']) && $_GET['forum_me'] == 'true'){
                 <label for="threadContent" class="form-label">ประเภทการมองเห็นกระทู้</label>
                 <select class="form-select" name="group_type" id="selectType">
                   <option value="public">สาธารณะ</option>
-                  <option value="year_group">รุ่นของฉัน</option>
+                  <?php if ($_SESSION['user']['user_type'] == USER_TYPE_ALUMNI) { ?>
+                    <option value="year_group">รุ่นของฉัน</option>
+                  <?php } ?>
                 </select>
                 <div class="form-text">*สาธารณะ : ทุกคนจะสามารถมองเห็นกระทู้ของท่านได้หมด</div>
-                <div class="form-text">*รุ่นของฉัน : ผู้ที่จบปีการศึกษาปีเดียวกับท่าน หรือเพื่อนร่วมรุ่นจึงจะสามารถเห็นกระทู้นี้ได้</div>
+                <?php if ($_SESSION['user']['user_type'] == USER_TYPE_ALUMNI) { ?>
+                  <div class="form-text">*รุ่นของฉัน : ผู้ที่จบปีการศึกษาปีเดียวกับท่าน หรือเพื่อนร่วมรุ่นจึงจะสามารถเห็นกระทู้นี้ได้</div>
+                <?php } ?>
               </div>
               <div class="mb-3" style="max-width: 300px;">
                 <label for="customFile" class="form-label">แนบไฟล์ภาพ</label>
@@ -507,6 +535,18 @@ if(isset($_GET['forum_me']) && $_GET['forum_me'] == 'true'){
         editor.on('change', function() {
           editor.save();
         });
+      }
+    });
+
+
+    //ตรวจสอบจำนวนการอัพโหลดไฟล์ภาพ
+    document.getElementById('imageFile').addEventListener('change', function() {
+      const maxFiles = 5;
+      const files = this.files;
+
+      if (files.length > maxFiles) {
+        modalAlert('เกิดข้อผิดพลาด','สามารภอัปโหลดไฟล์ภาพได้สูงสุด 5 ไฟล์','error');
+        this.value = ''; // เคลียร์ค่าไฟล์
       }
     });
 

@@ -9,6 +9,15 @@ class User
         $this->conn = $db;
     }
 
+    public function getUser($id)
+    {
+        $stmt = $this->conn->prepare("SELECT * FROM {$this->table} WHERE status_register = 1 AND user_id = :id");
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
     public function countUser()
     {
         $stmt = $this->conn->prepare("SELECT COUNT(*) FROM {$this->table}");
@@ -34,13 +43,13 @@ class User
             $sql .= " student_code = :student_code";
 
             $stmt = $this->conn->prepare($sql);
-            $stmt->bindParam(':student_code', $data);
+            $stmt->bindParam(':student_code', $student_code);
         }
 
         $stmt->execute();
         $user = $stmt->fetchColumn();
         
-        if ($user > 0) {
+        if (isset($user)) {
             if ($user == 0) {
                 return ['result' => false, 'message' => 'สถานะการลงทะเบียนของท่าน ไม่ได้รับการอณุญาติให้ใช้งาน หากมีข้อสงสัยกรุณาติดต่อเจ้าหน้าที่ที่เกี่ยวข้อง'];
             }

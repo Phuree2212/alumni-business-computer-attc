@@ -1,5 +1,5 @@
 <?php
-require_once '../../auth/auth_admin.php';
+require_once '../../auth/auth_all.php';
 require_once '../../classes/activities.php';
 require_once '../../classes/image_uploader.php';
 
@@ -8,26 +8,87 @@ $conn = $db->connect();
 
 $activity = new Activities($conn);
 
-if($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id'])){
+// ตรวจสอบการ submit ฟอร์ม
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_activity'])) {
+    $activity_id = $_POST['activity_id'] ?? '';
+    $title = $_POST['title'] ?? '';
+    $date = $_POST['date'] ?? '';
+    $content = $_POST['content'] ?? '';
+    $deleted_images = $_POST['deleted_images'] ?? '';
+
+    // Get current images
+    $current_item = $activity->getActivity($activity_id);
+    $current_images = !empty($current_item['image']) ? explode(',', $current_item['image']) : [];
+
+    // Remove deleted images from current images array
+    if (!empty($deleted_images)) {
+        $deleted_array = explode(',', $deleted_images);
+        $current_images = array_diff($current_images, $deleted_array);
+
+        // Delete physical files using ImageUploader's deleteFile method
+        $uploader = new ImageUploader('../../assets/images/activity');
+        foreach ($deleted_array as $deleted_image) {
+            $uploader->deleteFile($deleted_image);
+        }
+    }
+
+    // Handle new image uploads
+    $new_image_files = '';
+    if (isset($_FILES['images']) && !empty($_FILES['images']['name'][0])) {
+        $uploader = new ImageUploader('../../assets/images/activity');
+        $uploader->setMaxFileSize(5 * 1024 * 1024) // MAX SIZE 5MB
+            ->setMaxFiles(5 - count($current_images)); // Limit based on existing images
+
+        $result = $uploader->uploadMultiple($_FILES['images'], 'activity');
+
+        if ($result['success']) {
+            foreach ($result['files'] as $file) {
+                $new_image_files .= $file['fileName'] . ',';
+            }
+            $new_image_files = rtrim($new_image_files, ',');
+        }
+
+        if (!empty($result['errors'])) {
+            foreach ($result['errors'] as $error) {
+                echo "<script>alert('" . $error . "')</script>";
+            }
+        }
+    }
+
+    // Combine existing and new images
+    $final_images = array_merge($current_images, explode(',', $new_image_files));
+    $final_images = array_filter($final_images); // Remove empty values
+    $final_images_string = implode(',', $final_images);
+
+    // Update activity data
+    if ($activity->editActivity($activity_id, $title,  $date, $content, $final_images_string)) {
+       echo json_encode(['result' => true, 'message' => 'แก้ไขข้อมูลสำเร็จ']);
+    } else {
+       echo json_encode(['result' => false, 'message' => 'แก้ไขข้อมูลไม่สำเร็จ']);
+    }
+
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id'])) {
     $id = $_GET['id'];
 
     //ดึงรายละเอียดข้อมูลข่าวสาร
     $item = $activity->getActivity($id);
-    if($item){
+    if ($item) {
         $title = $item['title'];
         $content = $item['content'];
         $date = $item['date'];
         $images = $item['image'];
         $existing_images = !empty($images) ? explode(',', $images) : [];
-    }else{
+    } else {
         echo "<script>alert('ไม่พบข้อมูลข่าวสาร')</script>";
         echo "<script>window.location.href='index.php'</script>";
     }
-    
 }
 
 //ถ้าไม่มีการค่าไอดีส่งมา และไม่มีการกดปุ่มอัพเดตขอมูลให้กลับไปที่หน้าแรก
-if(!isset($_GET['id']) && !isset($_POST['update_activity'])){
+if (!isset($_GET['id']) && !isset($_POST['update_activity'])) {
     header('Location: index.php');
 }
 
@@ -140,15 +201,15 @@ if(!isset($_GET['id']) && !isset($_POST['update_activity'])){
     <div class="main-content">
         <div class="card-body">
             <h3 class="h3 mb-4">แก้ไขข้อมูลกิจกรรม</h3>
-            <form method="POST" enctype="multipart/form-data">
+            <form method="POST" id="editForm" enctype="multipart/form-data">
                 <input type="hidden" name="activity_id" value="<?php echo $id ?>">
                 <input type="hidden" name="deleted_images" id="deletedImages" value="">
-                
+
                 <div class="mb-3">
                     <label class="form-label">หัวเรื่อง<span class="text-danger">*</span></label>
                     <input type="text" name="title" value="<?php echo htmlspecialchars($title ?? '') ?>" class="form-control" required>
                 </div>
-                
+
                 <div class="mb-3">
                     <label class="form-label">เนื้อหา<span class="text-danger">*</span></label>
                     <textarea class="form-control" id="content-editor" name="content" rows="3" required><?php echo htmlspecialchars($content ?? '') ?></textarea>
@@ -161,24 +222,24 @@ if(!isset($_GET['id']) && !isset($_POST['update_activity'])){
 
                 <!-- แสดงรูปภาพเดิม -->
                 <?php if (!empty($existing_images)): ?>
-                <div class="image-section">
-                    <div class="section-title">รูปภาพปัจจุบัน</div>
-                    <div id="existingImagesContainer" class="preview-container">
-                        <?php foreach ($existing_images as $index => $image): ?>
-                            <?php if (!empty(trim($image))): ?>
-                                <div class="existing-image-container" data-image="<?php echo htmlspecialchars($image) ?>">
-                                    <img src="../../assets/images/activity/<?php echo htmlspecialchars($image) ?>" 
-                                         alt="Existing image <?php echo $index + 1 ?>"
-                                         onerror="this.src='../../assets/images/no-image.png'">
-                                    <button type="button" class="delete-image-btn" onclick="removeExistingImage(this, '<?php echo htmlspecialchars($image) ?>')">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                    <div class="text-center small mt-1"><?php echo htmlspecialchars($image) ?></div>
-                                </div>
-                            <?php endif; ?>
-                        <?php endforeach; ?>
+                    <div class="image-section">
+                        <div class="section-title">รูปภาพปัจจุบัน</div>
+                        <div id="existingImagesContainer" class="preview-container">
+                            <?php foreach ($existing_images as $index => $image): ?>
+                                <?php if (!empty(trim($image))): ?>
+                                    <div class="existing-image-container" data-image="<?php echo htmlspecialchars($image) ?>">
+                                        <img src="../../assets/images/activity/<?php echo htmlspecialchars($image) ?>"
+                                            alt="Existing image <?php echo $index + 1 ?>"
+                                            onerror="this.src='../../assets/images/no-image.png'">
+                                        <button type="button" class="delete-image-btn" onclick="removeExistingImage(this, '<?php echo htmlspecialchars($image) ?>')">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                        <div class="text-center small mt-1"><?php echo htmlspecialchars($image) ?></div>
+                                    </div>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        </div>
                     </div>
-                </div>
                 <?php endif; ?>
 
                 <!-- เพิ่มรูปภาพใหม่ -->
@@ -199,7 +260,7 @@ if(!isset($_GET['id']) && !isset($_POST['update_activity'])){
                 </div>
 
                 <div class="mb-3">
-                    <button type="submit" name="update_activity" class="btn btn-success">บันทึกการแก้ไข</button>
+                    <button type="button" id="updateActivity" value="1" name="update_activity" class="btn btn-success">บันทึกการแก้ไข</button>
                     <a href="index.php" class="btn btn-danger">ยกเลิก</a>
                 </div>
             </form>
@@ -213,83 +274,36 @@ if(!isset($_GET['id']) && !isset($_POST['update_activity'])){
     <script src="../functions/remove_image.js"></script>
     <script src="../functions/preview_image.js"></script>
     <script src="../functions/tinymce.js"></script>
-</body>
+    <script>
+        document.getElementById('updateActivity').addEventListener('click', () => {
+            const form = document.getElementById('editForm');
+            const formData = new FormData(form);
+            formData.append('update_activity', 1);
 
-<?php
-// ตรวจสอบการ submit ฟอร์ม
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_activity'])) {
-    $activity_id = $_POST['activity_id'] ?? '';
-    $title = $_POST['title'] ?? '';
-    $date = $_POST['date'] ?? '';
-    $content = $_POST['content'] ?? '';
-    $deleted_images = $_POST['deleted_images'] ?? '';
-    
-
-    // Get current images
-    $current_item = $activity->getActivity($activity_id);
-    $current_images = !empty($current_item['image']) ? explode(',', $current_item['image']) : [];
-
-    // Remove deleted images from current images array
-    if (!empty($deleted_images)) {
-        $deleted_array = explode(',', $deleted_images);
-        $current_images = array_diff($current_images, $deleted_array);
-        
-        // Delete physical files using ImageUploader's deleteFile method
-        $uploader = new ImageUploader('../../assets/images/activity');
-        foreach ($deleted_array as $deleted_image) {
-            $uploader->deleteFile($deleted_image);
-        }
-    }
-
-    // Handle new image uploads
-    $new_image_files = '';
-    if (isset($_FILES['images']) && !empty($_FILES['images']['name'][0])) {
-        $uploader = new ImageUploader('../../assets/images/activity');
-        $uploader->setMaxFileSize(5 * 1024 * 1024) // MAX SIZE 5MB
-            ->setMaxFiles(5 - count($current_images)) // Limit based on existing images
-            ->enableThumbnail(300, 300);
-
-        $result = $uploader->uploadMultiple($_FILES['images'], 'activity');
-
-        if ($result['success']) {
-            foreach ($result['files'] as $file) {
-                $new_image_files .= $file['fileName'] . ',';
-            }
-            $new_image_files = rtrim($new_image_files, ',');
-        }
-
-        if (!empty($result['errors'])) {
-            foreach ($result['errors'] as $error) {
-                echo "<script>alert('" . $error . "')</script>";
-            }
-        }
-    }
-
-    // Combine existing and new images
-    $final_images = array_merge($current_images, explode(',', $new_image_files));
-    $final_images = array_filter($final_images); // Remove empty values
-    $final_images_string = implode(',', $final_images);
-
-    // Update activity data
-    if ($activity->editActivity($activity_id, $title,  $date,$content, $final_images_string)) {
-        echo "<script> modalConfirm('ยืนยันการแก้ไขข้อมูล', 'คุณต้องการแก้ไขข้อมูลใช่หรือไม่?')
+            modalConfirm('ยืนยันการแก้ไขข้อมูล', 'คุณต้องการแก้ไขข้อมูลใช่หรือไม่?')
                 .then((result) => {
-                    if(result.isConfirmed){
-                        modalAlert('แก้ไขข้อมูลสำเร็จ', '', 'success')
-                        .then((result) => {
-                            if (result.isConfirmed) {
-                                window.location.href='index.php';
-                            }
-                        });  
+                    if (result.isConfirmed) {
+                        fetch('edit.php', {
+                                method: 'POST',
+                                body: formData
+                            })
+                            .then(response => response.json())
+                            .then(response => {
+                                if (response.result) {
+                                    modalAlert('แก้ไขข้อมูลสำเร็จ', 'แก้ไขข้อมูลสำเร็จ', 'success')
+                                    .then(()=>{window.location.href = 'index.php'});
+                                } else {
+                                    modalAlert('แก้ไขข้อมูลสำเร็จ', response.message, 'error')
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Fetch Error:', error);
+                                modalAlert('เกิดข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้', 'error');
+                            });
                     }
-                })</script>";
-    } else {
-        echo "<script>alert('asdsad')</script>";
-        echo "<script>modalAlert('เกิดข้อผิดพลาด', 'ไม่สามารถแก้ไขข้อมูลได้', 'error');</script>";
-    }
-
-    exit;
-}
-?>
+                })
+        });
+    </script>
+</body>
 
 </html>

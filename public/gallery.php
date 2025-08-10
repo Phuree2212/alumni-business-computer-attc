@@ -1,5 +1,25 @@
 <?php
 require_once '../config/config.php';
+require_once '../classes/news.php';
+require_once '../classes/activities.php';
+require_once '../classes/gallery.php';
+require_once '../classes/visitor_tracker.php';
+
+$db = new Database();
+$conn = $db->connect();
+
+$tracker = new VisitorTracker($conn);
+$tracker->track();
+
+$news = new News($conn);
+$activity = new Activities($conn);
+
+$news_list = $news->getAllNews(6, 0);
+$activity_list = $activity->getAllActivity(6, 0);
+
+//ดึงรูปภาพ gallery
+$gallery_class = new Gallery($news, $activity);
+$galleries = $gallery_class->getAllImages();
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -9,6 +29,7 @@ require_once '../config/config.php';
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="../assets/css/bootstrap-icons.min.css" rel="stylesheet">
     <link href="../assets/css/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.8/css/all.css">
     <style>
         .photo-gallery {
             color: #313437;
@@ -97,6 +118,7 @@ require_once '../config/config.php';
 
         .modal-body {
             padding: 0;
+            position: relative;
         }
 
         .modal-dialog {
@@ -140,6 +162,7 @@ require_once '../config/config.php';
             align-items: center;
             justify-content: center;
             transition: background 0.3s ease;
+            z-index: 1060;
         }
 
         .modal-navigation:hover {
@@ -165,6 +188,7 @@ require_once '../config/config.php';
             padding: 5px 15px;
             border-radius: 20px;
             font-size: 0.9rem;
+            z-index: 1060;
         }
     </style>
 </head>
@@ -172,165 +196,47 @@ require_once '../config/config.php';
 <body>
     <?php include '../includes/navbar.php'; ?>
 
-   <div class="photo-gallery">
+    <div class="photo-gallery">
         <div class="container">
             <div class="intro">
                 <h2 class="text-center">แกลเลอรี/รูปภาพ</h2>
                 <h5 class="text-center">รวมรูปภาพกิจกรรมในแผนกวิชาคอมพิวเตอร์ธุรกิจ</h5>
             </div>
             <div class="row photos">
-                <div class="col-sm-6 col-md-4 col-lg-3 item">
-                    <div class="gallery-item" data-bs-toggle="modal" data-bs-target="#imageModal1">
-                        <img class="img-fluid" src="https://artgallery.yale.edu/sites/default/files/styles/hero_small/public/2023-01/ag-doc-2281-0036-pub.jpg?h=147a4df9&itok=xOjI1bjU" alt="Image 1">
-                        
-                    </div>
-                </div>
-                <div class="col-sm-6 col-md-4 col-lg-3 item">
-                    <div class="gallery-item" data-bs-toggle="modal" data-bs-target="#imageModal2">
-                        <img class="img-fluid" src="https://artgallery.yale.edu/sites/default/files/styles/hero_small/public/2023-01/ag-doc-2281-0036-pub.jpg?h=147a4df9&itok=xOjI1bjU" alt="Image 2">
-                        
-                    </div>
-                </div>
-                <div class="col-sm-6 col-md-4 col-lg-3 item">
-                    <div class="gallery-item" data-bs-toggle="modal" data-bs-target="#imageModal3">
-                        <img class="img-fluid" src="https://artgallery.yale.edu/sites/default/files/styles/hero_small/public/2023-01/ag-doc-2281-0036-pub.jpg?h=147a4df9&itok=xOjI1bjU" alt="Image 3">
-                        
-                    </div>
-                </div>
-                <div class="col-sm-6 col-md-4 col-lg-3 item">
-                    <div class="gallery-item" data-bs-toggle="modal" data-bs-target="#imageModal4">
-                        <img class="img-fluid" src="https://artgallery.yale.edu/sites/default/files/styles/hero_small/public/2023-01/ag-doc-2281-0036-pub.jpg?h=147a4df9&itok=xOjI1bjU" alt="Image 4">
-                        
-                    </div>
-                </div>
-                <div class="col-sm-6 col-md-4 col-lg-3 item">
-                    <div class="gallery-item" data-bs-toggle="modal" data-bs-target="#imageModal5">
-                        <img class="img-fluid" src="https://artgallery.yale.edu/sites/default/files/styles/hero_small/public/2023-01/ag-doc-2281-0036-pub.jpg?h=147a4df9&itok=xOjI1bjU" alt="Image 5">
-                        
-                    </div>
-                </div>
-                <div class="col-sm-6 col-md-4 col-lg-3 item">
-                    <div class="gallery-item" data-bs-toggle="modal" data-bs-target="#imageModal6">
-                        <img class="img-fluid" src="https://artgallery.yale.edu/sites/default/files/styles/hero_small/public/2023-01/ag-doc-2281-0036-pub.jpg?h=147a4df9&itok=xOjI1bjU" alt="Image 6">
-                       
-                    </div>
-                </div>
-                <div class="col-sm-6 col-md-4 col-lg-3 item">
-                    <div class="gallery-item" data-bs-toggle="modal" data-bs-target="#imageModal7">
-                        <img class="img-fluid" src="https://artgallery.yale.edu/sites/default/files/styles/hero_small/public/2023-01/ag-doc-2281-0036-pub.jpg?h=147a4df9&itok=xOjI1bjU" alt="Image 7">
-                        
-                    </div>
-                </div>
-                <div class="col-sm-6 col-md-4 col-lg-3 item">
-                    <div class="gallery-item" data-bs-toggle="modal" data-bs-target="#imageModal8">
-                        <img class="img-fluid" src="https://artgallery.yale.edu/sites/default/files/styles/hero_small/public/2023-01/ag-doc-2281-0036-pub.jpg?h=147a4df9&itok=xOjI1bjU" alt="Image 8">
-                        
-                    </div>
-                </div>
+                <?php if (!empty($galleries)) {
+                    $index = 0;
+                    foreach ($galleries as $gallery) {
+                        $image_path = "../assets/images/{$gallery['type']}/{$gallery['image']}";
+                ?>
+                        <div class="col-sm-6 col-md-4 col-lg-3 item">
+                            <div class="gallery-item" onclick="openModal(<?php echo $index; ?>)">
+                                <img class="img-fluid" src="<?php echo $image_path ?>">
+                            </div>
+                        </div>
+                <?php 
+                        $index++;
+                    }
+                } ?>
             </div>
         </div>
     </div>
 
-    <!-- Modals -->
-    <div class="modal fade" id="imageModal1" tabindex="-1" aria-hidden="true">
+    <!-- Single Modal for all images -->
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <img class="modal-image" src="https://artgallery.yale.edu/sites/default/files/styles/hero_small/public/2023-01/ag-doc-2281-0036-pub.jpg?h=147a4df9&itok=xOjI1bjU" alt="Image 1">
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="imageModal2" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <img class="modal-image" src="https://artgallery.yale.edu/sites/default/files/styles/hero_small/public/2023-01/ag-doc-2281-0036-pub.jpg?h=147a4df9&itok=xOjI1bjU" alt="Image 2">
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="imageModal3" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <img class="modal-image" src="https://artgallery.yale.edu/sites/default/files/styles/hero_small/public/2023-01/ag-doc-2281-0036-pub.jpg?h=147a4df9&itok=xOjI1bjU" alt="Image 3">
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="imageModal4" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <img class="modal-image" src="https://artgallery.yale.edu/sites/default/files/styles/hero_small/public/2023-01/ag-doc-2281-0036-pub.jpg?h=147a4df9&itok=xOjI1bjU" alt="Image 4">
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="imageModal5" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <img class="modal-image" src="https://artgallery.yale.edu/sites/default/files/styles/hero_small/public/2023-01/ag-doc-2281-0036-pub.jpg?h=147a4df9&itok=xOjI1bjU" alt="Image 5">
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="imageModal6" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <img class="modal-image" src="https://artgallery.yale.edu/sites/default/files/styles/hero_small/public/2023-01/ag-doc-2281-0036-pub.jpg?h=147a4df9&itok=xOjI1bjU" alt="Image 6">
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="imageModal7" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <img class="modal-image" src="https://artgallery.yale.edu/sites/default/files/styles/hero_small/public/2023-01/ag-doc-2281-0036-pub.jpg?h=147a4df9&itok=xOjI1bjU" alt="Image 7">
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="imageModal8" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <img class="modal-image" src="https://artgallery.yale.edu/sites/default/files/styles/hero_small/public/2023-01/ag-doc-2281-0036-pub.jpg?h=147a4df9&itok=xOjI1bjU" alt="Image 8">
+                    <img class="modal-image" id="modalImage" src="" alt="">
+                    <button class="modal-navigation btn-prev" onclick="previousImage()">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <button class="modal-navigation btn-next" onclick="nextImage()">
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <div class="image-counter" id="imageCounter">1 / 1</div>
                 </div>
             </div>
         </div>
@@ -340,81 +246,78 @@ require_once '../config/config.php';
 
     <script src="../assets/js/bootstrap.min.js"></script>
     <script>
-        // Array of images
+        // Create images array from PHP data
         const images = [
-            {
-                src: 'https://artgallery.yale.edu/sites/default/files/styles/hero_small/public/2023-01/ag-doc-2281-0036-pub.jpg?h=147a4df9&itok=xOjI1bjU',
-                alt: 'Image 1'
-            },
-            {
-                src: 'https://artgallery.yale.edu/sites/default/files/styles/hero_small/public/2023-01/ag-doc-2281-0036-pub.jpg?h=147a4df9&itok=xOjI1bjU',
-                alt: 'Image 2'
-            },
-            {
-                src: 'https://artgallery.yale.edu/sites/default/files/styles/hero_small/public/2023-01/ag-doc-2281-0036-pub.jpg?h=147a4df9&itok=xOjI1bjU',
-                alt: 'Image 3'
-            },
-            {
-                src: 'https://artgallery.yale.edu/sites/default/files/styles/hero_small/public/2023-01/ag-doc-2281-0036-pub.jpg?h=147a4df9&itok=xOjI1bjU',
-                alt: 'Image 4'
-            },
-            {
-                src: 'https://artgallery.yale.edu/sites/default/files/styles/hero_small/public/2023-01/ag-doc-2281-0036-pub.jpg?h=147a4df9&itok=xOjI1bjU',
-                alt: 'Image 5'
-            },
-            {
-                src: 'https://artgallery.yale.edu/sites/default/files/styles/hero_small/public/2023-01/ag-doc-2281-0036-pub.jpg?h=147a4df9&itok=xOjI1bjU',
-                alt: 'Image 6'
-            },
-            {
-                src: 'https://artgallery.yale.edu/sites/default/files/styles/hero_small/public/2023-01/ag-doc-2281-0036-pub.jpg?h=147a4df9&itok=xOjI1bjU',
-                alt: 'Image 7'
-            },
-            {
-                src: 'https://artgallery.yale.edu/sites/default/files/styles/hero_small/public/2023-01/ag-doc-2281-0036-pub.jpg?h=147a4df9&itok=xOjI1bjU',
-                alt: 'Image 8'
+            <?php 
+            if (!empty($galleries)) {
+                $js_images = [];
+                foreach ($galleries as $gallery) {
+                    $image_path = "../assets/images/{$gallery['type']}/{$gallery['image']}";
+                    $js_images[] = "{ src: '" . addslashes($image_path) . "', alt: 'Gallery Image' }";
+                }
+                echo implode(',', $js_images);
             }
+            ?>
         ];
 
         let currentImageIndex = 0;
+        const modal = new bootstrap.Modal(document.getElementById('imageModal'));
 
         function openModal(index) {
             currentImageIndex = index;
             updateModalImage();
+            modal.show();
         }
 
         function updateModalImage() {
             const modalImage = document.getElementById('modalImage');
             const imageCounter = document.getElementById('imageCounter');
-            
-            modalImage.src = images[currentImageIndex].src;
-            modalImage.alt = images[currentImageIndex].alt;
-            imageCounter.textContent = `${currentImageIndex + 1} / ${images.length}`;
+
+            if (images.length > 0) {
+                modalImage.src = images[currentImageIndex].src;
+                modalImage.alt = images[currentImageIndex].alt;
+                imageCounter.textContent = `${currentImageIndex + 1} / ${images.length}`;
+                
+                // Show/hide navigation buttons
+                const prevBtn = document.querySelector('.btn-prev');
+                const nextBtn = document.querySelector('.btn-next');
+                
+                if (images.length <= 1) {
+                    prevBtn.style.display = 'none';
+                    nextBtn.style.display = 'none';
+                } else {
+                    prevBtn.style.display = 'flex';
+                    nextBtn.style.display = 'flex';
+                }
+            }
         }
 
         function nextImage() {
-            currentImageIndex = (currentImageIndex + 1) % images.length;
-            updateModalImage();
+            if (images.length > 1) {
+                currentImageIndex = (currentImageIndex + 1) % images.length;
+                updateModalImage();
+            }
         }
 
         function previousImage() {
-            currentImageIndex = (currentImageIndex - 1 + images.length) % images.length;
-            updateModalImage();
+            if (images.length > 1) {
+                currentImageIndex = (currentImageIndex - 1 + images.length) % images.length;
+                updateModalImage();
+            }
         }
 
         // Keyboard navigation
         document.addEventListener('keydown', function(e) {
-            const modal = document.getElementById('imageModal');
-            const isModalOpen = modal.classList.contains('show');
-            
+            const modalElement = document.getElementById('imageModal');
+            const isModalOpen = modalElement.classList.contains('show');
+
             if (isModalOpen) {
                 if (e.key === 'ArrowRight') {
                     nextImage();
                 } else if (e.key === 'ArrowLeft') {
                     previousImage();
                 } else if (e.key === 'Escape') {
-                    const modalInstance = bootstrap.Modal.getInstance(modal);
-                    modalInstance.hide();
+                    modal.hide();
                 }
             }
         });
@@ -423,19 +326,23 @@ require_once '../config/config.php';
         let touchStartX = 0;
         let touchEndX = 0;
 
-        document.getElementById('modalImage').addEventListener('touchstart', function(e) {
-            touchStartX = e.changedTouches[0].screenX;
-        });
+        document.addEventListener('DOMContentLoaded', function() {
+            const modalImage = document.getElementById('modalImage');
+            
+            modalImage.addEventListener('touchstart', function(e) {
+                touchStartX = e.changedTouches[0].screenX;
+            });
 
-        document.getElementById('modalImage').addEventListener('touchend', function(e) {
-            touchEndX = e.changedTouches[0].screenX;
-            handleSwipe();
+            modalImage.addEventListener('touchend', function(e) {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            });
         });
 
         function handleSwipe() {
             const swipeThreshold = 50;
             const diff = touchStartX - touchEndX;
-            
+
             if (Math.abs(diff) > swipeThreshold) {
                 if (diff > 0) {
                     nextImage(); // Swipe left - next image

@@ -90,63 +90,170 @@ $gallery = $gallery_class->getAllImages();
             object-fit: cover;
             border-radius: 8px;
         }
+
+        /* Banner Carousel Responsive Styles */
+        .banner-carousel-container {
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .banner-image {
+            width: 100%;
+            object-fit: cover;
+            border-radius: 15px;
+            /* Desktop และ Tablet */
+            height: 600px;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 767.98px) {
+            .banner-image {
+                height: 250px;
+                /* ลดความสูงสำหรับมือถือ */
+            }
+
+            .banner-carousel-container {
+                border-radius: 10px;
+                margin-bottom: 1rem;
+            }
+
+            /* ปรับขนาด carousel controls สำหรับมือถือ */
+            .carousel-control-prev,
+            .carousel-control-next {
+                width: 5%;
+                opacity: 0.8;
+            }
+
+            .carousel-control-prev-icon,
+            .carousel-control-next-icon {
+                width: 20px;
+                height: 20px;
+            }
+
+            /* ปรับขนาด indicators สำหรับมือถือ */
+            .carousel-indicators [data-bs-target] {
+                width: 8px;
+                height: 8px;
+                margin: 0 2px;
+            }
+        }
+
+        /* Tablet responsive */
+        @media (min-width: 768px) and (max-width: 991.98px) {
+            .banner-image {
+                height: 400px;
+            }
+        }
+
+        /* Small mobile responsive */
+        @media (max-width: 575.98px) {
+            .banner-image {
+                height: 200px;
+            }
+
+            .container-xl {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* ปรับปรุงการแสดงผลของ carousel indicators */
+        .carousel-indicators {
+            bottom: 15px;
+        }
+
+        .carousel-indicators [data-bs-target] {
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.9);
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin: 0 4px;
+            transition: all 0.3s ease;
+        }
+
+        .carousel-indicators .active {
+            background-color: white;
+            transform: scale(1.2);
+        }
     </style>
 </head>
 
 <body>
     <?php include '../includes/navbar.php'; ?>
 
-    <!-- แทนที่ section ที่มีรูปภาพแนะนำแผนกเดิม -->
+    <!-- Banner Carousel Section -->
     <section>
-        <div class="container-xl mt-4">
+        <div class="container-xl mt-4 mb-4">
             <div class="row">
-                <div>
+                <div class="col-12">
                     <!-- Image Carousel -->
-                    <div id="departmentCarousel" class="carousel slide" data-bs-ride="carousel">
-                        <div class="carousel-indicators">
-                            <button type="button" data-bs-target="#departmentCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
-                            <button type="button" data-bs-target="#departmentCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
-                            <button type="button" data-bs-target="#departmentCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
-                            <button type="button" data-bs-target="#departmentCarousel" data-bs-slide-to="3" aria-label="Slide 4"></button>
+                    <div class="banner-carousel-container">
+                        <div id="departmentCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+                            <?php if (!empty(BANNERS)) {
+                                $banners = explode(',', BANNERS);
+                                $banner_count = count($banners);
+                            ?>
+                                <!-- Carousel Indicators -->
+                                <div class="carousel-indicators">
+                                    <?php for ($i = 0; $i < $banner_count; $i++) { ?>
+                                        <button type="button"
+                                            data-bs-target="#departmentCarousel"
+                                            data-bs-slide-to="<?php echo $i ?>"
+                                            <?php echo $i === 0 ? 'class="active" aria-current="true"' : '' ?>
+                                            aria-label="Slide <?php echo $i + 1 ?>"></button>
+                                    <?php } ?>
+                                </div>
+
+                                <!-- Carousel Items -->
+                                <div class="carousel-inner">
+                                    <?php foreach ($banners as $index => $banner) { ?>
+                                        <div class="carousel-item <?php echo $index === 0 ? 'active' : '' ?>">
+                                            <img class="banner-image"
+                                                src="../assets/images/banners/<?php echo trim($banner) ?>"
+                                                alt="แบนเนอร์เว็บไซต์สายใยคอมพิวเตอร์ธุรกิจ วิทยาลัยเทคนิคอ่างทอง"
+                                                loading="<?php echo $index === 0 ? 'eager' : 'lazy' ?>">
+                                        </div>
+                                    <?php } ?>
+                                </div>
+
+                                <!-- Carousel Controls -->
+                                <?php if ($banner_count > 1) { ?>
+                                    <button class="carousel-control-prev" type="button" data-bs-target="#departmentCarousel" data-bs-slide="prev">
+                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Previous</span>
+                                    </button>
+                                    <button class="carousel-control-next" type="button" data-bs-target="#departmentCarousel" data-bs-slide="next">
+                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Next</span>
+                                    </button>
+                                <?php } ?>
+
+                            <?php } else { ?>
+                                <!-- Default banner if no banners configured -->
+                                <div class="carousel-inner">
+                                    <div class="carousel-item active">
+                                        <div class="banner-image d-flex align-items-center justify-content-center bg-light">
+                                            <h3 class="text-muted">ไม่มีแบนเนอร์ที่แสดง</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php } ?>
                         </div>
-                        <div class="carousel-inner">
-                            <div class="carousel-item active">
-                                <img style="width: 100%; height: 600px; object-fit: cover; border-radius: 10px;"
-                                    src="../assets/images/banners/banner_4.jpg"
-                                    alt="การแข่งขันทักษะ">
-
-                            </div>
-                            <div class="carousel-item">
-                                <img style="width: 100%; height: 600px; object-fit: cover; border-radius: 10px;"
-                                    src="../assets/images/banners/banner_2.jpg"
-                                    alt="สภาพแวดล้อมการเรียนรู้">
-
-                            </div>
-                            <div class="carousel-item">
-                                <img style="width: 100%; height: 600px; object-fit: cover; border-radius: 10px;"
-                                    src="../assets/images/banners/banner_3.jpg"
-                                    alt="โครงงานนักเรียน">
-
-                            </div>
-
-                        </div>
-                        <button class="carousel-control-prev" type="button" data-bs-target="#departmentCarousel" data-bs-slide="prev">
-                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Previous</span>
-                        </button>
-                        <button class="carousel-control-next" type="button" data-bs-target="#departmentCarousel" data-bs-slide="next">
-                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Next</span>
-                        </button>
                     </div>
                 </div>
-
             </div>
         </div>
     </section>
 
     <!-- Activities & News -->
-    <section class="py-5">
+    <section>
         <div class="container-xl">
             <div class="row">
 

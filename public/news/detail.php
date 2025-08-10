@@ -14,8 +14,12 @@ $lastest_activities = $activity->getAllActivity(5, 0);
 
 if ($_SERVER['REQUEST_METHOD'] == "GET" && !empty($_GET['id'])) {
     $id = $_GET['id'];
-    $news_detail = $news->getNews($id);
+    $news->countViewNews($id);
 
+    if(!$news_detail = $news->getNews($id)){
+        echo "<script>alert('ไม่พบข้อมูลข่าวสาร')</script>";
+        echo "<script>window.location.href='index.php'</script>";
+    }
 
     $fullname = $news_detail['first_name'] . ' ' . $news_detail['last_name'];
     $role = $news_detail['role'];

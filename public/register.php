@@ -424,9 +424,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             })
             .then(response => response.json())
             .then(response => {
-              if (response.result === true) {
-                modalAlert('ลงทะเบียนสมาชิกสำเร็จ', 'กรุณารอการตรวจสอบข้อมูลเพื่ออนุมัติการใช้งาน จากผู้ดูแลระบบภายใน 24 ชั่วโมง ขอบคุณที่ร่วมลงทะเบียนกับเรา', 'success')
-                  .then(() => location.reload());
+              if (response.result) {
+                modalAlert('ลงทะเบียนสมาชิกสำเร็จ', 'กรุณารอการตรวจสอบข้อมูลเพื่ออนุมัติการใช้งาน จากผู้ดูแลระบบภายใน 24 ชั่วโมง ขอบคุณที่ร่วมลงทะเบียนกับเรา ท่านสามารถตรวจสอบผลการลงทะเบียนของท่านได้', 'success')
+                  .then(() => window.location.href = 'check_status_user.php');
               } else {
                 modalAlert('ลงทะเบียนไม่สำเร็จ', response.message, 'error');
               }

@@ -11,6 +11,23 @@ class Activities
         $this->conn = $db;
     }
 
+    public function countViewActivity($activity_id)
+    {
+        $session_key = "viewed_activity_" . $activity_id;
+        $current_time = time(); // เวลาปัจจุบัน (หน่วยเป็นวินาที)
+        $cooldown = 600; // 600 วินาที = 10 นาที
+
+        // ถ้ายังไม่เคยดู หรือ ดูเกิน 10 นาทีแล้ว
+        if (!isset($_SESSION[$session_key]) || ($current_time - $_SESSION[$session_key]) > $cooldown) {
+            $stmt = $this->conn->prepare("UPDATE {$this->table} SET views_count = views_count + 1 WHERE activity_id = :id");
+            $stmt->bindParam(':id', $activity_id, PDO::PARAM_INT);
+            $stmt->execute();
+
+            // บันทึกเวลาที่ดูล่าสุด
+            $_SESSION[$session_key] = $current_time;
+        }
+    }
+
     //ดึงจำนวนทั้งหมดจากฐานข้อมูล
     public function getTotalCount()
     {
@@ -117,12 +134,13 @@ class Activities
         $stmt->bindParam(':id', $id);
 
         $result = $stmt->execute();
-        
+
         return ['result' => $result, 'message' => $result ? 'ลบข้อมูล ID ' . $id . ' สำเร้็จ' : 'ลบข้อมูลไม่สำเร็จ เกิดข้อผิดพลาดขึ้นกับฐานข้อมูล'];
     }
 
     //กรองข้อมูล
-    public function searchAndFilterActivity($keyword = '', $start_date = '', $end_date = '', $limit = null, $offset = null) {
+    public function searchAndFilterActivity($keyword = '', $start_date = '', $end_date = '', $limit = null, $offset = null)
+    {
         $sql = "SELECT * FROM {$this->table} WHERE 1";
         $params = [];
 
@@ -162,7 +180,8 @@ class Activities
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getAllImageActivity($limit = null, $offset = null){
+    public function getAllImageActivity($limit = null, $offset = null)
+    {
         if (isset($limit) && isset($offset)) {
             $stmt = $this->conn->prepare("SELECT image FROM {$this->table} ORDER BY created_at DESC LIMIT :limit OFFSET :offset");
             $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
@@ -172,8 +191,7 @@ class Activities
         }
 
         $stmt->execute();
-        $array_image = array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'image'); 
+        $array_image = array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'image');
         return $array_image;
     }
-
 }

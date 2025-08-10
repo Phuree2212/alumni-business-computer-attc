@@ -193,4 +193,47 @@ class Student extends User
         $stmt->execute();
         return $stmt->fetchColumn();
     }
+
+    public function createStudentByAdmin($student_code, $first_name, $last_name, $password, $email, $phone, $education_level, $image = '')
+    {
+        try {
+            $result_check_duplicate = $this->checkDuplicateRegister($student_code, $email, $phone);
+            if (!$result_check_duplicate['result']) {
+                return $result_check_duplicate;
+            }
+
+            $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+
+            //ตรวจสอบว่ามีการอัพโหลดรูปภาพมาไหม ถ้ามีให้ทำการบันทึกรูปภาพ
+            $new_image_files = '';
+            if (!empty($image['name'])) {
+                $uploader = new ImageUploader('../../../assets/images/user/student');
+                $uploader->setMaxFileSize(5 * 1024 * 1024) // MAX SIZE 5MB
+                    ->setMaxFiles(1); // Limit based on existing images
+
+                $new_image_files .= $first_name . '_' . $last_name;
+                $result = $uploader->uploadSingle($_FILES['image'], $new_image_files);
+                $new_image_files = $result['fileName'];
+            }
+
+            $stmt = $this->conn->prepare("INSERT INTO {$this->table} (student_code, first_name, last_name, password, email, phone, user_type, education_level, status_register, image)
+                    VALUES (:student_code, :first_name, :last_name, :password, :email, :phone, 'student', :education_level, 1, :image)");
+            $stmt->bindParam(':student_code', $student_code);
+            $stmt->bindParam(':first_name', $first_name);
+            $stmt->bindParam(':last_name', $last_name);
+            $stmt->bindParam(':password', $hashedPassword);
+            $stmt->bindParam(':email', $email);
+            $stmt->bindParam(':phone', $phone);
+            $stmt->bindParam(':education_level', $education_level);
+            $stmt->bindParam(':image', $new_image_files);
+
+            if ($stmt->execute()) {
+                return ['result' => true, 'message' => 'สร้างบัญชี นักเรียน/นักศึกษา สำเร็จ'];
+            } else {
+                return ['result' => false, 'message' => 'เกิดข้อผิดพลาดในการสร้างบัญชีผู้ใช้'];
+            }
+        } catch (PDOException $e) {
+            return ['result' => false, 'message' => 'Database error: ' . $e->getMessage()];
+        }
+    }
 }

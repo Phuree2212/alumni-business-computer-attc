@@ -30,7 +30,7 @@
             <div class="menu-category">หลัก</div>
 
             <div class="menu-item">
-                <a href="<?php echo $base_url ?>/admin/" class="menu-link active">
+                <a href="<?php echo $base_url ?>/admin/" class="menu-link <?php echo (parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === '/alumni_business_computer_attc/admin/' || (parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) === '/alumni_business_computer_attc/admin/index.php') ? 'active' : ''; ?>">
                     <i class="fas fa-home"></i>
                     <span>หน้าหลัก</span>
                 </a>
@@ -42,24 +42,24 @@
                     <span>จัดการข้อมูลผู้ใช้งาน</span>
                     <i class="fas fa-chevron-down ms-auto"></i>
                 </a>
-                <div class="collapse submenu" id="users-menu">
-                    <a href="<?php echo $base_url ?>/admin/user/student/" class="menu-link">
+                <div class="collapse submenu <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/user/') !== false) ? 'show' : ''; ?>" id="users-menu">
+                    <a href="<?php echo $base_url ?>/admin/user/student/" class="menu-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/user/student/') !== false) ? 'active' : ''; ?>">
                         <i class="fas fa-user"></i>
                         <span>จัดการข้อมูลนักเรียน นักศึกษา</span>
                     </a>
-                    <a href="<?php echo $base_url ?>/admin/user/alumni/" class="menu-link">
+                    <a href="<?php echo $base_url ?>/admin/user/alumni/" class="menu-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/user/alumni/') !== false) ? 'active' : ''; ?>">
                         <i class="fas fa-user-graduate"></i>
                         <span>จัดการข้อมูลศิษย์เก่า</span>
                     </a>
-                    <a href="<?php echo $base_url ?>/admin/user/teacher/" class="menu-link">
+                    <a href="<?php echo $base_url ?>/admin/user/teacher/" class="menu-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/user/teacher/') !== false) ? 'active' : ''; ?>">
                         <i class="fas fa-chalkboard-teacher"></i>
                         <span>จัดการข้อมูลครู/อาจารย์</span>
                     </a>
-                    <a href="<?php echo $base_url ?>/admin/user/admin/" class="menu-link">
+                    <a href="<?php echo $base_url ?>/admin/user/admin/" class="menu-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/user/admin/') !== false) ? 'active' : ''; ?>">
                         <i class="fas fa-user"></i>
                         <span>จัดการข้อมูลผู้ดูแลระบบ</span>
                     </a>
-                    <a href="<?php echo $base_url ?>/admin/user/user_approval/" class="menu-link">
+                    <a href="<?php echo $base_url ?>/admin/user/user_approval/" class="menu-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/user/user_approval/') !== false) ? 'active' : ''; ?>">
                         <i class="fas fa-user-plus"></i>
                         <span>คำขอลงทะเบียนใหม่</span>
                     </a>
@@ -72,16 +72,16 @@
                     <span>จัดการเนื้อหา</span>
                     <i class="fas fa-chevron-down ms-auto"></i>
                 </a>
-                <div class="collapse submenu" id="content-menu">
-                    <a href="<?php echo $base_url ?>/admin/news/" class="menu-link">
+                <div class="collapse submenu <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/activities/') !== false) || (strpos($_SERVER['REQUEST_URI'], '/admin/news/') || (strpos($_SERVER['REQUEST_URI'], '/admin/webboard/') !== false) !== false)  ? 'show' : ''; ?>" id="content-menu">
+                    <a href="<?php echo $base_url ?>/admin/news/" class="menu-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/news/') !== false) ? 'active' : ''; ?>">
                         <i class="fas fa-newspaper"></i>
                         <span>ข่าวสาร/ประชาสัมพันธ์</span>
                     </a>
-                    <a href="<?php echo $base_url ?>/admin/activities/" class="menu-link">
+                    <a href="<?php echo $base_url ?>/admin/activities/" class="menu-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/activities/') !== false) ? 'active' : ''; ?>">
                         <i class="fas fa-calendar"></i>
                         <span>กิจกรรม</span>
                     </a>
-                    <a href="<?php echo $base_url ?>/admin/webboard/" class="menu-link">
+                    <a href="<?php echo $base_url ?>/admin/webboard/" class="menu-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/webboard/') !== false) ? 'active' : ''; ?>">
                         <i class="fas fa-comments"></i>
                         <span>กระทู้</span>
                     </a>
@@ -91,10 +91,25 @@
             <div class="menu-category">รายงาน</div>
 
             <div class="menu-item">
-                <a href="#" class="menu-link">
+                <a href="#" class="menu-link" data-bs-toggle="collapse" data-bs-target="#dashboard-menu">
                     <i class="fas fa-chart-bar"></i>
                     <span>สถิติการใช้งาน</span>
+                    <i class="fas fa-chevron-down ms-auto"></i>
                 </a>
+                <div class="collapse submenu <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/dashboard/') !== false) ? 'show' : ''; ?>" id="dashboard-menu">
+                    <a href="<?php echo $base_url ?>/admin/dashboard/view_website.php" class="menu-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/dashboard/view_website.php') !== false) ? 'active' : ''; ?>">
+                        <i class="fas fa-newspaper"></i>
+                        <span>สถิติการเข้าชมเว็บไซต์</span>
+                    </a>
+                    <a href="<?php echo $base_url ?>/admin/dashboard/user.php" class="menu-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/dashboard/user.php') !== false) ? 'active' : ''; ?>">
+                        <i class="fas fa-calendar"></i>
+                        <span>สถิติสมาชิกในเว็บไซต์</span>
+                    </a>
+                    <a href="<?php echo $base_url ?>/admin/dashboard/webboard.php" class="menu-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/dashboard/webboard.php') !== false) ? 'active' : ''; ?>">
+                        <i class="fas fa-calendar"></i>
+                        <span>สถิติเว็บบอร์ด</span>
+                    </a>
+                </div>
             </div>
 
             <div class="menu-item">
@@ -103,12 +118,12 @@
                     <span>รายงานการใช้งานที่ไม่เหมาะสม</span>
                     <i class="fas fa-chevron-down ms-auto"></i>
                 </a>
-                <div class="collapse submenu" id="report-menu">
-                    <a href="<?php echo $base_url ?>/admin/report_problems/topic/" class="menu-link">
+                <div class="collapse submenu <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/report_problems/') !== false) ? 'show' : ''; ?>" id="report-menu">
+                    <a href="<?php echo $base_url ?>/admin/report_problems/topic/" class="menu-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/report_problems/topic/') !== false) ? 'active' : ''; ?>">
                         <i class="fas fa-newspaper"></i>
                         <span>รายงานกระทู้</span>
                     </a>
-                    <a href="<?php echo $base_url ?>/admin/report_problems/comment/" class="menu-link">
+                    <a href="<?php echo $base_url ?>/admin/report_problems/comment/" class="menu-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/report_problems/comment/') !== false) ? 'active' : ''; ?>">
                         <i class="fas fa-calendar"></i>
                         <span>รายงานความคิดเห็น</span>
                     </a>
@@ -118,7 +133,7 @@
             <div class="menu-category">ระบบ</div>
 
             <div class="menu-item">
-                <a href="<?php echo $base_url ?>/admin/setting.php" class="menu-link">
+                <a href="<?php echo $base_url ?>/admin/setting.php" class="menu-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/setting.php') !== false) ? 'active' : ''; ?>">
                     <i class="fas fa-cog"></i>
                     <span>ตั้งค่าเว็บไซต์</span>
                 </a>
@@ -133,8 +148,8 @@
 
             <div class="menu-item">
                 <a href="<?php echo $base_url ?>/auth/logout.php" class="menu-link">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>ออกจากระบบ</span>
+                    <i class="fas fa-sign-out-alt text-danger"></i>
+                    <span class="text-danger">ออกจากระบบ</span>
                 </a>
             </div>
         </div>

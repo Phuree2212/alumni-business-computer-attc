@@ -9,12 +9,20 @@ $conn = $db->connect();
 $news = new News($conn);
 $activity = new Activities($conn);
 
+
 $lastest_news = $news->getAllNews(5, 0);
 $lastest_activities = $activity->getAllActivity(5, 0);
 
 if ($_SERVER['REQUEST_METHOD'] == "GET" && !empty($_GET['id'])) {
     $id = $_GET['id'];
-    $activity_detail = $activity->getActivity($id);
+
+    $activity->countViewActivity($id); //นับจำนวนการเข้าชมกิจกรรม
+
+    if(!$activity_detail = $activity->getActivity($id)){
+        echo "<script>alert('ไม่พบข้อมูลกิจกรรม')</script>";
+        echo "<script>window.location.href='index.php'</script>";
+    }
+    
 
     $fullname = $activity_detail['first_name'] . ' ' . $activity_detail['last_name'];
     $role = $activity_detail['role'];

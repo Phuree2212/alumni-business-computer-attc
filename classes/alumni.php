@@ -53,7 +53,6 @@ class Alumni extends User
         return ['result' => $result, 'message' => $result ? 'ลบข้อมูล ID ' . $id . ' สำเร้็จ' : 'ลบข้อมูลไม่สำเร็จ เกิดข้อผิดพลาดขึ้นกับฐานข้อมูล'];
     }
 
-
     public function getTotalCount()
     {
         $stmt = $this->conn->prepare("SELECT COUNT(*) FROM {$this->table} WHERE user_type = 'alumni' AND status_register = 1");
@@ -215,5 +214,49 @@ class Alumni extends User
 
         $stmt->execute();
         return $stmt->fetchColumn();
+    }
+
+    public function createAlumniByAdmin($student_code, $first_name, $last_name, $password, $email, $phone, $education_level, $graduation_year, $image = '')
+    {
+        try {
+            $result_check_duplicate = $this->checkDuplicateRegister($student_code, $email, $phone);
+            if (!$result_check_duplicate['result']) {
+                return $result_check_duplicate;
+            }
+
+            $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+
+            //ตรวจสอบว่ามีการอัพโหลดรูปภาพมาไหม ถ้ามีให้ทำการบันทึกรูปภาพ
+            $new_image_files = '';
+            if (!empty($image['name'])) {
+                $uploader = new ImageUploader('../../../assets/images/user/alumni');
+                $uploader->setMaxFileSize(5 * 1024 * 1024) // MAX SIZE 5MB
+                    ->setMaxFiles(1); // Limit based on existing images
+
+                $new_image_files .= $first_name . '_' . $last_name;
+                $result = $uploader->uploadSingle($_FILES['image'], $new_image_files);
+                $new_image_files = $result['fileName'];
+            }
+
+            $stmt = $this->conn->prepare("INSERT INTO {$this->table} (student_code, first_name, last_name, password, email, phone, user_type, education_level, status_register, graduation_year, image)
+                    VALUES (:student_code, :first_name, :last_name, :password, :email, :phone, 'alumni', :education_level, 1, :graduation_year, :image)");
+            $stmt->bindParam(':student_code', $student_code);
+            $stmt->bindParam(':first_name', $first_name);
+            $stmt->bindParam(':last_name', $last_name);
+            $stmt->bindParam(':password', $hashedPassword);
+            $stmt->bindParam(':email', $email);
+            $stmt->bindParam(':phone', $phone);
+            $stmt->bindParam(':education_level', $education_level);
+            $stmt->bindParam(':graduation_year', $graduation_year);
+            $stmt->bindParam(':image', $new_image_files);
+
+            if ($stmt->execute()) {
+                return ['result' => true, 'message' => 'สร้างบัญชี ศิษย์เก่า สำเร็จ'];
+            } else {
+                return ['result' => false, 'message' => 'เกิดข้อผิดพลาดในการสร้างบัญชีผู้ใช้'];
+            }
+        } catch (PDOException $e) {
+            return ['result' => false, 'message' => 'Database error: ' . $e->getMessage()];
+        }
     }
 }

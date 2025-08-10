@@ -45,6 +45,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
   );
 }
 
+$countTotalAlumni = $alumni->getTotalCount();
+
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -275,7 +277,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
             <div class="row g-2 mb-4">
               <div class="col-12">
                 <div class="stats-card">
-                  <div class="stats-number"><?php echo $totalItems ?></div>
+                  <div class="stats-number"><?php echo $countTotalAlumni ?></div>
                   <small class="text-muted">สมาขิกศิษย์เก่า</small>
                 </div>
               </div>
@@ -337,7 +339,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
             </div>
           </div>
 
-          <!-- Filter Section -->
+          <!-- Filter Section
           <div class="filter-section">
             <div class="row align-items-center">
               <div class="col-md-6">
@@ -354,6 +356,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
 
             </div>
           </div>
+          -->
 
           <!-- Alumni Grid -->
           <div id="alumniGrid" class="row g-4">
@@ -367,13 +370,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
                 $graduation_year = $item['graduation_year'];
                 $status_education = !empty($item['status_education']) ? $item['status_education'] : 'ไม่มีข้อมูล';
 
+                $path_image = '../../assets/images/user/alumni/' . $image;
+                $path_no_image = '../../assets/images/user/no-image-profile.jpg';
+
               ?>
                 <div class="col-lg-4 col-md-6 alumni-item">
-                  <a class="nav-link" href="detail.php?id=<?php echo $id ?>">
+                  <a class="nav-link" href="../webboard/profile.php?id=<?php echo $id ?>">
                     <div class="card alumni-card h-100 position-relative">
                       <div class="year-badge"><?php echo $graduation_year ?></div>
                       <div class="card-body text-center">
-                        <img src="../../assets/images/user/alumni/<?php echo $image ?>" class="rounded-circle alumni-avatar mx-auto mb-3" alt="Alumni">
+                        <img src="<?php echo !empty($image) ? $path_image : $path_no_image ?>" class="rounded-circle alumni-avatar mx-auto mb-3" alt="Alumni">
                         <div class="alumni-info">
                           <h5><?php echo $fullname ?></h5>
                           <p class="text-muted mb-2"><?php echo $education_level ?> คอมพิวเตอร์ธุรกิจ</p>

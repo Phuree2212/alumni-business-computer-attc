@@ -20,13 +20,17 @@ class Webboard
 
     public function searchAndFilterForum($keyword = '', $start_date = '', $end_date = '', $year_group = 0, $limit = null, $offset = null)
     {
-        $sql = "SELECT f.*, u.image as profile, u.first_name, u.last_name, 
+        $sql = "SELECT f.*, 
+                   COALESCE(u.image, a.image) AS profile,
+                   COALESCE(u.first_name, a.first_name) AS first_name,
+                   COALESCE(u.last_name, a.last_name) AS last_name,
                    COUNT(DISTINCT l.like_id) AS like_count, 
                    COUNT(DISTINCT c.comment_id) AS comment_count
             FROM {$this->table} as f
-            LEFT JOIN users as u ON f.user_id = u.user_id
-            LEFT JOIN post_likes as l ON f.post_id = l.post_id
-            LEFT JOIN forum_comments as c ON f.post_id = c.post_id
+            LEFT JOIN users u ON f.user_type IN (1,2) AND f.user_id = u.user_id
+            LEFT JOIN admin a ON f.user_type IN (3,4) AND f.user_id = a.admin_id
+            LEFT JOIN post_likes l ON f.post_id = l.post_id
+            LEFT JOIN forum_comments c ON f.post_id = c.post_id
             WHERE 1";
 
         $params = [];
@@ -111,15 +115,24 @@ class Webboard
         return $stmt->fetchColumn();
     }
 
-    function getAllTopic($limit = "", $offset = "")
+    public function getAllTopic($limit = "", $offset = "")
     {
-        $stmt = $this->conn->prepare("SELECT f.*, u.image as profile, u.first_name, u.last_name, COUNT(DISTINCT l.like_id) AS like_count, COUNT(DISTINCT c.comment_id) AS comment_count FROM {$this->table} as f 
-                                      LEFT JOIN users as u ON f.user_id = u.user_id 
-                                      LEFT JOIN post_likes as l ON f.post_id = l.post_id
-                                      LEFT JOIN forum_comments as c ON f.post_id = c.post_id
-                                      GROUP BY f.post_id  
-                                      ORDER BY created_at DESC 
-                                      LIMIT :limit OFFSET :offset");
+        $sql = "SELECT f.*, 
+                   COALESCE(u.image, a.image) AS profile,
+                   COALESCE(u.first_name, a.first_name) AS first_name,
+                   COALESCE(u.last_name, a.last_name) AS last_name,
+                   COUNT(DISTINCT l.like_id) AS like_count, 
+                   COUNT(DISTINCT c.comment_id) AS comment_count
+            FROM {$this->table} as f
+            LEFT JOIN users u ON f.user_type IN (1,2) AND f.user_id = u.user_id
+            LEFT JOIN admin a ON f.user_type IN (3,4) AND f.user_id = a.admin_id
+            LEFT JOIN post_likes l ON f.post_id = l.post_id
+            LEFT JOIN forum_comments c ON f.post_id = c.post_id
+            GROUP BY f.post_id
+            ORDER BY f.created_at DESC
+            LIMIT :limit OFFSET :offset";
+
+        $stmt = $this->conn->prepare($sql);
 
         $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
         $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
@@ -129,26 +142,48 @@ class Webboard
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    function getTopicMe($user_id, $user_type, $limit = "", $offset = "")
-    {
-        $stmt = $this->conn->prepare("SELECT f.*, u.image as profile, u.first_name, u.last_name, COUNT(DISTINCT l.like_id) AS like_count, COUNT(DISTINCT c.comment_id) AS comment_count FROM {$this->table} as f 
-                                      LEFT JOIN users as u ON f.user_id = u.user_id 
-                                      LEFT JOIN post_likes as l ON f.post_id = l.post_id
-                                      LEFT JOIN forum_comments as c ON f.post_id = c.post_id
-                                      WHERE f.user_id = :user_id AND f.user_type = :user_type
-                                      GROUP BY f.post_id   
-                                      ORDER BY created_at DESC 
-                                      LIMIT :limit OFFSET :offset");
 
-        $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
-        $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
-        $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
-        $stmt->bindValue(':user_type', $user_type, PDO::PARAM_INT);
+    public function getTopicMe($user_id, $user_type, $limit = "", $offset = "")
+    {
+        $sql = "SELECT f.*, 
+                   COALESCE(u.image, a.image) AS profile,
+                   COALESCE(u.first_name, a.first_name) AS first_name,
+                   COALESCE(u.last_name, a.last_name) AS last_name,
+                   COUNT(DISTINCT l.like_id) AS like_count, 
+                   COUNT(DISTINCT c.comment_id) AS comment_count
+            FROM {$this->table} AS f
+            LEFT JOIN users u ON f.user_type IN (1,2) AND f.user_id = u.user_id
+            LEFT JOIN admin a ON f.user_type IN (3,4) AND f.user_id = a.admin_id
+            LEFT JOIN post_likes l ON f.post_id = l.post_id
+            LEFT JOIN forum_comments c ON f.post_id = c.post_id
+            WHERE f.user_id = :user_id AND f.user_type = :user_type
+            GROUP BY f.post_id
+            ORDER BY f.created_at DESC";
+
+        // รายการค่าที่ต้อง bind
+        $params = [
+            ':user_id'   => [$user_id, PDO::PARAM_INT],
+            ':user_type' => [$user_type, PDO::PARAM_INT],
+        ];
+
+        // เพิ่ม limit/offset ถ้ามี
+        if ($limit !== "" && $offset !== "") {
+            $sql .= " LIMIT :limit OFFSET :offset";
+            $params[':limit']  = [(int)$limit, PDO::PARAM_INT];
+            $params[':offset'] = [(int)$offset, PDO::PARAM_INT];
+        }
+
+        // เตรียมและ bind
+        $stmt = $this->conn->prepare($sql);
+        foreach ($params as $key => [$value, $type]) {
+            $stmt->bindValue($key, $value, $type);
+        }
 
         $stmt->execute();
-
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+
 
     function countTopicMe($user_id, $user_type)
     {
@@ -164,15 +199,24 @@ class Webboard
 
     function getTopic($id)
     {
-        $stmt = $this->conn->prepare("SELECT f.*, u.image AS profile, u.first_name, u.last_name, COUNT(l.post_id) AS like_count FROM {$this->table} as f 
-                                      LEFT JOIN users as u ON f.user_id = u.user_id 
-                                      LEFT JOIN post_likes as l ON f.post_id = l.post_id
-                                      WHERE f.post_id = :id
-                                      GROUP BY f.post_id");
+        $stmt = $this->conn->prepare("
+        SELECT f.*, 
+               COALESCE(u.image, a.image) AS profile,
+               COALESCE(u.first_name, a.first_name) AS first_name,
+               COALESCE(u.last_name, a.last_name) AS last_name,
+               COUNT(l.post_id) AS like_count
+        FROM {$this->table} AS f
+        LEFT JOIN users u ON f.user_type IN (1,2) AND f.user_id = u.user_id
+        LEFT JOIN admin a ON f.user_type IN (3,4) AND f.user_id = a.admin_id
+        LEFT JOIN post_likes l ON f.post_id = l.post_id
+        WHERE f.post_id = :id
+        GROUP BY f.post_id
+    ");
         $stmt->execute([':id' => $id]);
 
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+
 
     function createTopic($user_id, $user_type, $title, $content, $image, $group_type, $year_group = 0)
     {
@@ -226,11 +270,31 @@ class CommentForum extends Webboard
         }
     }
 
-    function getCommentPost($post_id)
+    public function getCommentPost($post_id, $parent_comment_id = 0)
     {
-        $stmt = $this->conn->prepare("SELECT c.*, u.user_id, u.first_name, u.last_name, u.image FROM {$this->table} as c 
-                                      INNER JOIN users as u ON c.user_id = u.user_id WHERE post_id = :id AND parent_comment_id = 0");
+        $sql = "SELECT c.*,
+                   CASE 
+                     WHEN c.user_type IN (1, 2) THEN u.first_name
+                     WHEN c.user_type IN (3, 4) THEN a.first_name
+                   END AS first_name,
+                   CASE 
+                     WHEN c.user_type IN (1, 2) THEN u.last_name
+                     WHEN c.user_type IN (3, 4) THEN a.last_name
+                   END AS last_name,
+                   CASE 
+                     WHEN c.user_type IN (1, 2) THEN u.image
+                     WHEN c.user_type IN (3, 4) THEN a.image
+                   END AS image
+            FROM {$this->table} AS c
+            LEFT JOIN users u ON c.user_type IN (1, 2) AND c.user_id = u.user_id
+            LEFT JOIN admin a ON c.user_type IN (3, 4) AND c.user_id = a.admin_id
+            WHERE c.post_id = :id";
 
+        if ($parent_comment_id == 0) {
+            $sql .= " AND c.parent_comment_id = 0";
+        }
+
+        $stmt = $this->conn->prepare($sql);
         $stmt->execute([':id' => $post_id]);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -238,8 +302,23 @@ class CommentForum extends Webboard
 
     function getReplyComment($post_id, $comment_id)
     {
-        $stmt = $this->conn->prepare("SELECT c.*, u.user_id, u.first_name, u.last_name, u.image FROM {$this->table} as c 
-                                      INNER JOIN users as u ON c.user_id = u.user_id WHERE post_id = :id AND parent_comment_id = :comment_id");
+        $stmt = $this->conn->prepare("SELECT c.*,
+                   CASE 
+                     WHEN c.user_type IN (1, 2) THEN u.first_name
+                     WHEN c.user_type IN (3, 4) THEN a.first_name
+                   END AS first_name,
+                   CASE 
+                     WHEN c.user_type IN (1, 2) THEN u.last_name
+                     WHEN c.user_type IN (3, 4) THEN a.last_name
+                   END AS last_name,
+                   CASE 
+                     WHEN c.user_type IN (1, 2) THEN u.image
+                     WHEN c.user_type IN (3, 4) THEN a.image
+                   END AS image
+            FROM {$this->table} AS c
+            LEFT JOIN users u ON c.user_type IN (1, 2) AND c.user_id = u.user_id
+            LEFT JOIN admin a ON c.user_type IN (3, 4) AND c.user_id = a.admin_id
+            WHERE c.post_id = :id AND c.parent_comment_id = :comment_id");
 
         $stmt->execute([
             ':id' => $post_id,

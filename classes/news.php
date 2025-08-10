@@ -11,6 +11,23 @@ class News
         $this->conn = $db;
     }
 
+    public function countViewNews($news_id)
+    {
+        $session_key = "viewed_news_" . $news_id;
+        $current_time = time(); // เวลาปัจจุบัน (หน่วยเป็นวินาที)
+        $cooldown = 600; // 600 วินาที = 10 นาที
+
+        // ถ้ายังไม่เคยดู หรือ ดูเกิน 10 นาทีแล้ว
+        if (!isset($_SESSION[$session_key]) || ($current_time - $_SESSION[$session_key]) > $cooldown) {
+            $stmt = $this->conn->prepare("UPDATE {$this->table} SET views_count = views_count + 1 WHERE news_id = :id");
+            $stmt->bindParam(':id', $news_id, PDO::PARAM_INT);
+            $stmt->execute();
+
+            // บันทึกเวลาที่ดูล่าสุด
+            $_SESSION[$session_key] = $current_time;
+        }
+    }
+
     //ดึงจำนวนทั้งหมดจากฐานข้อมูล
     public function getTotalCount()
     {

@@ -1,5 +1,5 @@
 <?php 
-require_once '../../auth/auth_user.php';
+require_once '../../auth/auth_all.php';
 require_once '../../classes/webboard.php';
 
 $db = new Database();
