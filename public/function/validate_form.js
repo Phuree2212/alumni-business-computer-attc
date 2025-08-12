@@ -44,3 +44,13 @@ function clearValidation(formId) {
         }
     });
 }
+
+const badWordsList = ["ควย", "สัส", "เย็ด", "ไอ้", "ไอ่", "มึง", "กู", "หี", "ครวย"];
+
+// ฟังก์ชันตรวจสอบคำหยาบ
+function hasBadWords(text) {
+    return badWordsList.some(word => {
+        const pattern = new RegExp(word, "gi");
+        return pattern.test(text);
+    });
+}

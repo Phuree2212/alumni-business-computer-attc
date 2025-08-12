@@ -4,7 +4,6 @@ require_once '../../../auth/auth_admin.php';
 require_once '../../../classes/student.php';
 require_once '../../../classes/image_uploader.php';
 
-
 $db = new Database();
 $conn = $db->connect();
 
@@ -30,6 +29,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
     $current_images = $_POST['current_images'];
     $deleted_images = $_POST['deleted_images'];
 
+    $password = $_POST['password'];
+
     if (!empty($deleted_images)) {     
         // Delete physical files using ImageUploader's deleteFile method
         $uploader = new ImageUploader('../../../assets/images/user/student');
@@ -53,7 +54,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
     }
 
     $result = $student->editStudent($id, $student_code, $first_name, $last_name, $email, $phone, $education_level, $status_register, $new_image_files
-                                     ,$address, $facebook, $instagram, $line, $tiktok);
+                                     ,$address, $facebook, $instagram, $line, $tiktok, $password);
 
     echo json_encode($result);
     

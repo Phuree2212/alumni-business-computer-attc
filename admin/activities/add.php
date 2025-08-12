@@ -67,7 +67,7 @@ $activity = new Activities($conn);
     <div class="main-content">
         <div class="card-body">
             <h3 class="h3 mb-4">สร้างข้อมูลกิจกรรมใหม่</h3>
-            <form method="POST" enctype="multipart/form-data">
+            <form method="POST" id="activityForm" enctype="multipart/form-data">
                 <div class="mb-3">
                     <label class="form-label">หัวเรื่อง<span class="text-danger">*</span></label>
                     <input type="text" name="title" class="form-control" required>
@@ -93,9 +93,10 @@ $activity = new Activities($conn);
                     <div id="imagePreviewContainer" class="preview-container"></div>
                 </div>
                 <div class="mb-3">
-                    <button type="submit" name="save_activity" class="btn btn-success">บันทึกข้อมูลข่าวสาร</button>
+                    <button type="button" id="saveBtn" name="save_activity" class="btn btn-success">บันทึกข้อมูลข่าวสาร</button>
                     <a href="index.php" class="btn btn-danger">ยกเลิก</a>
                 </div>
+                <input type="hidden" name="save_activity" value="1">
             </form>
         </div>
     </div>
@@ -108,6 +109,16 @@ $activity = new Activities($conn);
     <script src="../../assets/alerts/modal.js"></script>
     <script src="../functions/preview_image.js"></script>
     <script src="../functions/tinymce.js"></script>
+    <script>
+        document.getElementById('saveBtn').addEventListener('click', function() {
+            modalConfirm('ยืนยันการบันทึกข้อมูล', 'คุณต้องการบันทึกข้อมูลใช่หรือไม่?')
+                .then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById('activityForm').submit();
+                    }
+                });
+        });
+    </script>
 </body>
 <?php
 // ตรวจสอบการ submit ฟอร์ม
@@ -115,23 +126,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_activity'])) {
     $title = $_POST['title'] ?? '';
     $content = $_POST['content'] ?? '';
     $date = $_POST['date'] ?? '';
-    $created_by = 1;
+    $created_by = $_SESSION['user']['id'];
 
-    //อัปโหลดรูปภาพ
+    // อัปโหลดรูปภาพ
     $uploader = new ImageUploader('../../assets/images/activity');
-    $uploader->setMaxFileSize(5 * 1024 * 1024) // MAX SIZE 5MB
-        ->setMaxFiles(5)
-        ->enableThumbnail(300, 300);
+    $uploader->setMaxFileSize(5 * 1024 * 1024) // 5MB
+        ->setMaxFiles(5);
 
     $image_files_name = '';
     if (isset($_FILES['images'])) {
         $result = $uploader->uploadMultiple($_FILES['images'], 'activity');
 
         if ($result['success']) {
-            foreach ($result['files'] as $file) {
-                $image_files_name .= $file['fileName'] . ',';
-            }
-            $image_files_name = rtrim($image_files_name, ',');
+            $image_files_name = implode(',', array_column($result['files'], 'fileName'));
         }
 
         if (!empty($result['errors'])) {
@@ -143,24 +150,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_activity'])) {
 
     // บันทึกข้อมูล
     if ($activity->createActivity($title, $content, $date, $image_files_name, $created_by)) {
-        // ส่งกลับหน้ารายการข่าว
         echo "<script>
-            modalConfirm('ยืนยันการบันทึกข้อมูล', 'คุณต้องการบันทึกข้อมูลใช่หรือไม่?')
-                .then((result) => {
-                    if(result.isConfirmed){
-                        modalAlert('บันทึกข้อมูลสำเร็จ', '', 'success')
-                        .then((result) => {
-                            if (result.isConfirmed) {
-                                window.location.href='index.php';
-                            }
-                        });  
-                    }
-                })
-            </script>";
+            modalAlert('บันทึกข้อมูลสำเร็จ', '', 'success')
+            .then(() => {
+                window.location.href='index.php';
+            });
+        </script>";
     }
-
     exit;
 }
+
 ?>
 
 </html>

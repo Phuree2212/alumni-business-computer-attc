@@ -61,7 +61,7 @@ class Alumni extends User
     }
     public function getAllAlumni($limit, $offset)
     {
-        $stmt = $this->conn->prepare("SELECT * FROM {$this->table} WHERE user_type = 'alumni' AND status_register = 1 LIMIT :limit OFFSET :offset");
+        $stmt = $this->conn->prepare("SELECT * FROM {$this->table} WHERE user_type = 'alumni' LIMIT :limit OFFSET :offset");
         $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
         $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
@@ -79,54 +79,106 @@ class Alumni extends User
     }
 
 
-    public function editAlumni($id, $student_code, $first_name, $last_name, $email, $phone, $education_level, $graduation_year, $status_register, $current_job, $current_company, $current_salary, $image, $status_education
-                               , $address, $facebook, $instagram, $tiktok, $line)
-    {
-        try{
-        $result_check_duplicate = $this->checkDuplicate($id,$student_code, $email, $phone);
-        if(!$result_check_duplicate['result']){
-            return $result_check_duplicate;
-        }
+    public function editAlumni(
+        $id,
+        $student_code,
+        $first_name,
+        $last_name,
+        $email,
+        $phone,
+        $education_level,
+        $graduation_year,
+        $status_register,
+        $current_job,
+        $current_company,
+        $current_salary,
+        $image,
+        $status_education,
+        $address,
+        $facebook,
+        $instagram,
+        $tiktok,
+        $line,
+        $password = ''
+    ) {
+        try {
+            $result_check_duplicate = $this->checkDuplicate($id, $student_code, $email, $phone);
+            if (!$result_check_duplicate['result']) {
+                return $result_check_duplicate;
+            }
 
-        $stmt = $this->conn->prepare("UPDATE {$this->table} SET student_code = :student_code, first_name = :first_name, last_name = :last_name, email = :email, phone = :phone, education_level = :education_level, 
-                                      graduation_year = :graduation_year, status_register = :status_register, current_job = :current_job, current_company = :current_company, current_salary = :current_salary,
-                                      image = :image, status_education = :status_education, address = :address, facebook = :facebook, instagram = :instagram, tiktok = :tiktok, line = :line
-                                      WHERE user_id = :id");
+            // เริ่มสร้างคำสั่ง SQL
+            $sql = "UPDATE {$this->table} SET 
+                student_code = :student_code,
+                first_name = :first_name,
+                last_name = :last_name,
+                email = :email,
+                phone = :phone,
+                education_level = :education_level,
+                graduation_year = :graduation_year,
+                status_register = :status_register,
+                current_job = :current_job,
+                current_company = :current_company,
+                current_salary = :current_salary,
+                image = :image,
+                status_education = :status_education,
+                address = :address,
+                facebook = :facebook,
+                instagram = :instagram,
+                tiktok = :tiktok,
+                line = :line";
 
-        $stmt->bindParam(':id', $id);
-        $stmt->bindParam(':student_code', $student_code);
-        $stmt->bindParam(':first_name', $first_name);
-        $stmt->bindParam(':last_name', $last_name);
-        $stmt->bindParam(':email', $email);
-        $stmt->bindParam(':phone', $phone);
-        $stmt->bindParam(':education_level', $education_level);
-        $stmt->bindParam(':graduation_year', $graduation_year);
-        $stmt->bindParam(':status_register', $status_register);
-        $stmt->bindParam(':current_job', $current_job);
-        $stmt->bindParam(':current_company', $current_company);
-        $stmt->bindParam(':current_salary', $current_salary, PDO::PARAM_INT);
-        $stmt->bindParam(':image', $image);
-        $stmt->bindParam(':status_education', $status_education);
-        $stmt->bindParam(':address', $address);
-        $stmt->bindParam(':facebook', $facebook);
-        $stmt->bindParam(':instagram', $instagram);
-        $stmt->bindParam(':tiktok', $tiktok);
-        $stmt->bindParam(':line', $line);
-        
+            // ถ้ามีการส่ง password มา จะอัปเดตด้วย
+            if (!empty($password)) {
+                $sql .= ", password = :password";
+                $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            }
 
-        $result = $stmt->execute();
+            $sql .= " WHERE user_id = :id";
 
-        return ['result' => $result, 'message' => $result ? 'อัปเดตข้อมูล ID ' . $id . ' สำเร้็จ' : 'อัปเดตข้อมูลไม่สำเร็จ เกิดข้อผิดพลาดขึ้นกับฐานข้อมูล'];
-        }
-        catch(PDOException $e){
+            $stmt = $this->conn->prepare($sql);
+
+            $stmt->bindParam(':student_code', $student_code);
+            $stmt->bindParam(':first_name', $first_name);
+            $stmt->bindParam(':last_name', $last_name);
+            $stmt->bindParam(':email', $email);
+            $stmt->bindParam(':phone', $phone);
+            $stmt->bindParam(':education_level', $education_level);
+            $stmt->bindParam(':graduation_year', $graduation_year);
+            $stmt->bindParam(':status_register', $status_register);
+            $stmt->bindParam(':current_job', $current_job);
+            $stmt->bindParam(':current_company', $current_company);
+            $stmt->bindParam(':current_salary', $current_salary, PDO::PARAM_INT);
+            $stmt->bindParam(':image', $image);
+            $stmt->bindParam(':status_education', $status_education);
+            $stmt->bindParam(':address', $address);
+            $stmt->bindParam(':facebook', $facebook);
+            $stmt->bindParam(':instagram', $instagram);
+            $stmt->bindParam(':tiktok', $tiktok);
+            $stmt->bindParam(':line', $line);
+
+            if (!empty($password)) {
+                $stmt->bindParam(':password', $hashedPassword);
+            }
+
+            $stmt->bindParam(':id', $id);
+
+            $result = $stmt->execute();
+
+            return [
+                'result' => $result,
+                'message' => $result ? 'อัปเดตข้อมูล ID ' . $id . ' สำเร็จ' : 'อัปเดตข้อมูลไม่สำเร็จ เกิดข้อผิดพลาดขึ้นกับฐานข้อมูล'
+            ];
+        } catch (PDOException $e) {
             return ['result' => false, 'message' => $e->getMessage()];
         }
     }
 
+
     //กรองข้อมูล
-    public function searchAndFilterAlumni($keyword = '', $education_level = '', $graduation_year = '', $start_date = '', $end_date = '', $limit = null, $offset = null)
+    public function searchAndFilterAlumni($keyword = '', $education_level = '', $graduation_year = '', $status_register = '', $start_date = '', $end_date = '', $limit = null, $offset = null)
     {
-        $sql = "SELECT * FROM {$this->table} WHERE user_type = 'alumni' AND status_register = 1";
+        $sql = "SELECT * FROM {$this->table} WHERE user_type = 'alumni'";
         $params = [];
 
         if (!empty($keyword)) {
@@ -142,6 +194,11 @@ class Alumni extends User
         if (!empty($graduation_year)) {
             $sql .= " AND graduation_year = :graduation_year";
             $params[':graduation_year'] = (int)$graduation_year;
+        }
+
+        if ($status_register !== null && $status_register !== '') {
+            $sql .= " AND status_register = :status_register";
+            $params[':status_register'] = $status_register;
         }
 
         if (!empty($start_date)) {
@@ -176,9 +233,9 @@ class Alumni extends User
     }
 
     // นับการกรองข้อมูล
-    public function getSearchAndFilterCount($keyword = '', $education_level = '', $graduation_year = '', $start_date = '', $end_date = '')
+    public function getSearchAndFilterCount($keyword = '', $education_level = '', $graduation_year = '', $status_register = '', $start_date = '', $end_date = '')
     {
-        $sql = "SELECT COUNT(*) FROM {$this->table} WHERE user_type = 'alumni' AND status_register = 1";
+        $sql = "SELECT COUNT(*) FROM {$this->table} WHERE user_type = 'alumni'";
         $params = [];
 
         if (!empty($keyword)) {
@@ -194,6 +251,11 @@ class Alumni extends User
         if (!empty($graduation_year)) {
             $sql .= " AND graduation_year = :graduation_year";
             $params[':graduation_year'] = $graduation_year;
+        }
+
+        if ($status_register !== null && $status_register !== '') {
+            $sql .= " AND status_register = :status_register";
+            $params[':status_register'] = $status_register;
         }
 
         if (!empty($start_date)) {

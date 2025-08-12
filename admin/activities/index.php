@@ -173,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($start_d
                                 $title = $item['title'];
                                 $string_image = $item['image'];
                                 $first_image = explode(",", $item['image'])[0];
-                                $created_by = $item['created_by'];
+                                $created_by = $item['first_name'] . ' ' . $item['last_name'];
                                 $created_at = date('d/m/Y H:i', strtotime($item['created_at']));
                         ?>
                                 <tr>
@@ -187,11 +187,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($start_d
                                     <td><?= $created_by ?></td>
                                     <td><?= $created_at ?></td>
                                     <td class="text-center">
-                                        <button class="action-btn btn-outline-primary">
-                                            <a href="edit.php?id=<?php echo $id ?>"><i class="fas fa-edit"></i></a>
-                                        </button>
-                                        <button class="action-btn btn-outline-danger" onclick="deleteData(<?php echo $id ?>, 'id=<?php echo $id  ?>&image=<?php echo $string_image ?>', 'delete.php')">
-                                            <i class="fas fa-trash"></i>
+                                        
+                                        <a class="btn btn-warning" href="edit.php?id=<?php echo $id ?>">แก้ไข</a>
+                                        
+                                        <button class="btn btn-danger" onclick="deleteData(<?php echo $id ?>, 'id=<?php echo $id  ?>&image=<?php echo $string_image ?>', 'delete.php')">
+                                            ลบ
                                         </button>
                                     </td>
                                 </tr>

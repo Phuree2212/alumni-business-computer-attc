@@ -199,7 +199,7 @@ class Dashboard
                 FROM {$this->tbl_visitor}
                 {$whereClause}
                 GROUP BY {$groupField}
-                ORDER BY visit_at ASC";
+                ORDER BY visit_at DESC";
 
         $stmt = $this->conn->prepare($sql);
         $stmt->execute($params);

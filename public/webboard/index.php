@@ -538,14 +538,13 @@ if (isset($_GET['forum_me']) && $_GET['forum_me'] == 'true') {
       }
     });
 
-
     //ตรวจสอบจำนวนการอัพโหลดไฟล์ภาพ
     document.getElementById('imageFile').addEventListener('change', function() {
       const maxFiles = 5;
       const files = this.files;
 
       if (files.length > maxFiles) {
-        modalAlert('เกิดข้อผิดพลาด','สามารภอัปโหลดไฟล์ภาพได้สูงสุด 5 ไฟล์','error');
+        modalAlert('เกิดข้อผิดพลาด', 'สามารภอัปโหลดไฟล์ภาพได้สูงสุด 5 ไฟล์', 'error');
         this.value = ''; // เคลียร์ค่าไฟล์
       }
     });
@@ -584,20 +583,35 @@ if (isset($_GET['forum_me']) && $_GET['forum_me'] == 'true') {
 
     function checkvalidFormCreateTopic() {
       const inputTitle = document.getElementById('threadTitle');
-      const inputContent = tinymce.get('content-editor').getContent();
-
+      const inputContent = tinymce.get('content-editor').getContent({
+        format: 'text'
+      }); // เอาเฉพาะข้อความ ไม่เอาแท็ก HTML
       const showErrorContent = document.getElementById('invalidContent');
 
-      console.log(showErrorContent);
-
       let isValid = true;
+      showErrorContent.textContent = ''; // เคลียร์ข้อความเก่า
 
-      if (!inputTitle.value) {
+      // ตรวจว่ากรอกหัวข้อหรือไม่
+      if (!inputTitle.value.trim()) {
         showFieldError('threadTitle', 'กรุณากรอกหัวข้อเรื่อง');
         isValid = false;
       }
+
+      // ตรวจว่ากรอกเนื้อหาหรือไม่
       if (!inputContent.trim()) {
         showErrorContent.textContent = 'กรุณากรอกข้อมูลเนื้อหา';
+        isValid = false;
+      }
+
+      // ตรวจคำหยาบในหัวข้อ
+      if (hasBadWords(inputTitle.value)) {
+        showFieldError('threadTitle', 'หัวข้อมีคำไม่เหมาะสม กรุณาแก้ไข');
+        isValid = false;
+      }
+
+      // ตรวจคำหยาบในเนื้อหา
+      if (hasBadWords(inputContent)) {
+        showErrorContent.textContent = 'เนื้อหามีคำไม่เหมาะสม กรุณาแก้ไข';
         isValid = false;
       }
 

@@ -9,6 +9,31 @@ class User
         $this->conn = $db;
     }
 
+    public function changePassword($id ,$old_password, $new_password){
+        $stmt = $this->conn->prepare("SELECT password FROM {$this->table} WHERE user_id = :id");
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+
+        if($password_from_db = $stmt->fetchColumn()){
+            if(password_verify($old_password, $password_from_db)){
+                $new_password_hash = password_hash($new_password, PASSWORD_BCRYPT);
+                $stmt = $this->conn->prepare("UPDATE {$this->table} SET password = :new_password_hash WHERE user_id = :id");
+                $stmt->bindParam(':new_password_hash', $new_password_hash);
+                $stmt->bindParam(':id', $id);
+                
+                if($stmt->execute()){
+                    return ['result' => true, 'message' => 'แก้ไขรหัสผ่านสำเร็จ'];
+                }else{
+                    return ['result' => false, 'message' => 'ไม่สามารถเปลี่ยนรหัสผ่านได้ เกิดข้อผิดพลาดขึ้น'];
+                }
+            }else{
+                return ['result' => false, 'message' => 'รหัสผ่านเก่าไม่ถูกต้อง'];
+            }
+        }else{
+            return ['result' => false, 'message' => 'ไม่พบข้อมูลบัญชีที่ต้องการเปลี่ยนรหัสผ่าน'];
+        }
+    }
+
     public function getUser($id)
     {
         $stmt = $this->conn->prepare("SELECT * FROM {$this->table} WHERE status_register = 1 AND user_id = :id");

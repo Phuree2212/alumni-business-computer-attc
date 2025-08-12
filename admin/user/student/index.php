@@ -14,20 +14,23 @@ $itemsPerPage  = 10;
 // รับค่าการค้นหา
 $keyword    = trim($_GET['keyword'] ?? '');
 $education_level = $_GET['education_level'] ?? '';
+$status_register = isset($_GET['status_register']) ? $_GET['status_register'] : null;
 $start_date = $_GET['start_date'] ?? '';
 $end_date   = $_GET['end_date'] ?? '';
 
+//echo var_dump($status_register);
+
 // ถ้ามีการกรองข้อมูล
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($education_level) || !empty($start_date) || !empty($end_date))) {
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($education_level) || isset($status_register) || !empty($start_date) || !empty($end_date))) {
 
     // นับจำนวนรายการที่ตรงกับเงื่อนไขการค้นหา
-    $totalItems = $student->getSearchAndFilterCount($keyword, $education_level, $start_date, $end_date);
+    $totalItems = $student->getSearchAndFilterCount($keyword, $education_level, $status_register, $start_date, $end_date);
 
     // สร้าง pagination
     $pagination = new PaginationHelper($currentPage, $itemsPerPage, $totalItems);
 
     // ดึงข่าวตามเงื่อนไข
-    $student_list = $student->searchAndFilterStudent($keyword, $education_level, $start_date, $end_date, $pagination->getLimit(), $pagination->getOffset());
+    $student_list = $student->searchAndFilterStudent($keyword, $education_level, $status_register, $start_date, $end_date, $pagination->getLimit(), $pagination->getOffset());
 } else {
     // นับจำนวนรายการทั้งหมด
     $totalItems = $student->getTotalCount();
@@ -141,10 +144,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
                     </select>
                 </div>
                 <div class="col-md-2 mb-3">
+                    <label class="form-label fw-bold">สถานะ</label>
+                    <select name="status_register" class="form-select">
+                        <option selected value="">ทั้งหมด</option>
+                        <option <?php echo $status_register == 1 ? 'selected' : '' ?> value="1">อณุญาติการใช้งาน</option>
+                        <option <?php echo $status_register == '0' ? 'selected' : '' ?> value="0">ระงับการใช้งาน</option>
+                        <option <?php echo $status_register == 2 ? 'selected' : '' ?> value="2">รอดำเนินการอนุมัติ</option>
+                    </select>
+                </div>
+                <div class="col-md-1 mb-3">
                     <label class="form-label fw-bold">วันที่เริ่มต้น</label>
                     <input type="date" name="start_date" value="<?php echo htmlspecialchars($start_date ?? ''); ?>" class="form-control">
                 </div>
-                <div class="col-md-2 mb-3">
+                <div class="col-md-1 mb-3">
                     <label class="form-label fw-bold">วันที่สิ้นสุด</label>
                     <input type="date" name="end_date" value="<?php echo htmlspecialchars($end_date ?? ''); ?>" class="form-control">
                 </div>
@@ -194,7 +206,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
                                 $email = $item['email'];
                                 $phone = $item['phone'];
                                 $education_level = $item['education_level'];
-                                $status_register = $item['status_register'] == 1 ? 'ผู้ใช้งาน' : '';
+                                $status_register = $item['status_register'];
+                                $status_string = $status_register == 1 ? 'ผู้ใช้งาน' : ($status_register == 2 ? 'รอดำเนินการตรวจสอบ' : 'ถูกระงับการใช้งาน');
                                 $image = !empty($item['image']) ? $item['image'] : "";
                                 $created_at = date('d/m/Y H:i', strtotime($item['created_at']));
 
@@ -214,10 +227,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
                                     <td><?php echo htmlspecialchars($email); ?></td>
                                     <td><?php echo htmlspecialchars($phone); ?></td>
                                     <td><?php echo htmlspecialchars($education_level); ?></td>
-                                    <td><?php echo htmlspecialchars($status_register); ?></td>
+                                    <td class="text-<?php echo $status_register == 1 ? 'success' : ($status_register == 2 ? 'warning' : 'danger') ?>"><?php echo htmlspecialchars($status_string); ?></td>
                                     <td><?php echo htmlspecialchars($created_at); ?></td>
                                     <td class="text-center">
-                                        <button class="action-btn btn-outline-primary"
+                                        <button class="btn btn-warning"
                                             onclick="modalEditStudent(
                                                 <?php echo $id; ?>, 
                                                 '<?php echo htmlspecialchars($student_code, ENT_QUOTES); ?>', 
@@ -238,10 +251,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
                                             )"
                                             data-bs-toggle="modal"
                                             data-bs-target="#modalManageData">
-                                            <i class="fas fa-edit"></i>
+                                            แก้ไข
                                         </button>
-                                        <button class="action-btn btn-outline-danger" onclick="deleteData(<?php echo $id; ?>, 'id=<?php echo $id ?>&image=<?php echo $item['image'] ?>', 'delete.php')">
-                                            <i class="fas fa-trash"></i>
+                                        <button class="btn btn-danger" onclick="deleteData(<?php echo $id; ?>, 'id=<?php echo $id ?>&image=<?php echo $item['image'] ?>&user_type=1 ?>', 'delete.php')">
+                                            ลบ
                                         </button>
                                     </td>
                                 </tr>
@@ -332,6 +345,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
                                     <input type="email" class="form-control" id="editEmail" name="email" required>
                                 </div>
 
+                                <div class="mb-3">
+                                    <label class="form-label text-danger">รหัสผ่าน (ถ้าไม่ต้องการเปลี่ยนให้เว้นว่าง)</label>
+                                    <input type="text" class="form-control" id="editPassword" name="password">
+                                </div>
+
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">เบอร์โทรศัพท์</label>
@@ -396,10 +414,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
                                 </div>
                             </div>
                         </div>
-
-
-
-
                     </form>
 
                 </div>
@@ -422,7 +436,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
     <script src="../../functions/update_data.js"></script>
     <script>
         function modalEditStudent(id, student_code, first_name, last_name, email, phone, education_level, status_register, image, created_at, issetImage,
-                                  address, facebook, instagram, tiktok, line) {
+            address, facebook, instagram, tiktok, line) {
             // กำหนดค่าให้กับฟอร์ม Edit Modal
             document.getElementById('editStudentId').value = id;
             document.getElementById('editStudentCode').value = student_code;

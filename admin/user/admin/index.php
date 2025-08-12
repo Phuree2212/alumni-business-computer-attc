@@ -195,7 +195,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($start_d
                                     <td><?php echo htmlspecialchars($position); ?></td>
                                     <td><?php echo htmlspecialchars($created_at); ?></td>
                                     <td class="text-center">
-                                        <button class="action-btn btn-outline-primary"
+                                        <button class="btn btn-warning"
                                             onclick="modalEdit(
                                                 <?php echo $id; ?>, 
                                                 '<?php echo htmlspecialchars($username, ENT_QUOTES); ?>', 
@@ -210,10 +210,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($start_d
                                             )"
                                             data-bs-toggle="modal"
                                             data-bs-target="#modalEditData">
-                                            <i class="fas fa-edit"></i>
+                                            แก้ไข
                                         </button>
-                                        <button class="action-btn btn-outline-danger" onclick="deleteData(<?php echo $id; ?>, 'id=<?php echo $id ?>&image=<?php echo $item['image'] ?>', 'delete.php')">
-                                            <i class="fas fa-trash"></i>
+                                        <button class="btn btn-danger" onclick="deleteData(<?php echo $id; ?>, 'id=<?php echo $id ?>&image=<?php echo $item['image'] ?>&user_type=3', 'delete.php')">
+                                            ลบ
                                         </button>
                                     </td>
                                 </tr>

@@ -210,8 +210,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($user_ty
                                     <td><?php echo $status_register; ?></td>
                                     <td><?php echo $created_at; ?></td>
                                     <td class="text-center">
-                                        <button class="action-btn btn-outline-success" onclick="approveUser(<?php echo $id ?>)">อนุมัติ</button>
-                                        <button class="action-btn btn-outline-danger" onclick="rejectUser(<?php echo $id ?>)">ไม่อนุมัติ</button>
+                                        <button class="btn btn-success" onclick="approveUser(<?php echo $id ?>)">อนุมัติ</button>
+                                        <button class="btn btn-danger" onclick="rejectUser(<?php echo $id ?>)">ไม่อนุมัติ</button>
                                     </td>
                                 </tr>
                         <?php }

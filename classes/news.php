@@ -87,7 +87,11 @@ class News
     public function getAllNews($limit = null, $offset = null)
     {
         if (isset($limit) && isset($offset)) {
-            $stmt = $this->conn->prepare("SELECT * FROM {$this->table} ORDER BY created_at DESC LIMIT :limit OFFSET :offset");
+            $stmt = $this->conn->prepare("SELECT n.*, a.first_name, a.last_name FROM {$this->table} AS n 
+                                          LEFT JOIN admin as a
+                                          ON n.created_by = a.admin_id
+                                          ORDER BY created_at DESC 
+                                          LIMIT :limit OFFSET :offset");
             $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
             $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
         } else {
@@ -107,7 +111,7 @@ class News
         $stmt->bindParam(':title', $title);
         $stmt->bindParam(':content', $content);
         $stmt->bindParam(':image', $image);
-        $stmt->bindParam(':created_by', $created_by);
+        $stmt->bindParam(':created_by', $created_by, PDO::PARAM_INT);
 
         return $stmt->execute();
     }

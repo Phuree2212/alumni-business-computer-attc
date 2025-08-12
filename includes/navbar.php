@@ -32,6 +32,7 @@
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                         <?php if (isset($_SESSION['user']['user_type']) && ($_SESSION['user']['user_type'] == USER_TYPE_ALUMNI || $_SESSION['user']['user_type'] == USER_TYPE_STUDENT)) { ?>
                             <li><a class="dropdown-item" href="<?php echo $base_url ?>/public/profile.php">โปรไฟล์</a></li>
+                            <li><a class="dropdown-item" href="<?php echo $base_url ?>/public/change_password.php">เปลี่ยนรหัสผ่าน</a></li>
                             <li><a class="dropdown-item text-danger" href="<?php echo $base_url ?>/auth/logout.php">ออกจากจะบบ</a></li>
                         <?php } else if (isset($_SESSION['user']['user_type']) && ($_SESSION['user']['user_type'] == USER_TYPE_ADMIN || $_SESSION['user']['user_type'] == USER_TYPE_TEACHER)) { ?>
                             <li><a class="dropdown-item" href="<?php echo $base_url ?>/admin/">ส่วนของผู้ดูแลระบบ</a></li>

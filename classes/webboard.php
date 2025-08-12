@@ -246,6 +246,40 @@ class Webboard
 
         return ['result' => $result, 'message' => $result ? 'ลบข้อมูล ID ' . $id . ' สำเร้็จ' : 'ลบข้อมูลไม่สำเร็จ เกิดข้อผิดพลาดขึ้นกับฐานข้อมูล'];
     }
+
+    public function deleteTopicUser($user_id, $user_type)
+    {
+        // 1. ดึงข้อมูลโพสต์ทั้งหมดของ user
+        $stmt = $this->conn->prepare("SELECT image FROM {$this->table} WHERE user_id = :user_id AND user_type = :user_type");
+        $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+        $stmt->bindParam(':user_type', $user_type, PDO::PARAM_INT);
+        $stmt->execute();
+        $topics = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // 2. ลบไฟล์รูปจากโฟลเดอร์
+        foreach ($topics as $topic) {
+            if (!empty($topic['image'])) {
+                $images = explode(',', $topic['image']);
+                $uploader = new ImageUploader('../../../assets/images/webboard');
+                foreach ($images as $image) {
+                    $uploader->deleteFile($image);
+                }
+            }
+        }
+
+        // 3. ลบโพสต์ทั้งหมดของ user จากฐานข้อมูล
+        $stmtDelete = $this->conn->prepare("DELETE FROM {$this->table} WHERE user_id = :user_id AND user_type = :user_type");
+        $stmtDelete->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+        $stmtDelete->bindParam(':user_type', $user_type, PDO::PARAM_INT);
+        $result = $stmtDelete->execute();
+
+        return [
+            'result' => $result,
+            'message' => $result
+                ? 'ลบข้อมูลและรูปภาพของผู้ใช้ ID ' . $user_id . ' สำเร็จ'
+                : 'ลบข้อมูลไม่สำเร็จ เกิดข้อผิดพลาดขึ้นกับฐานข้อมูล'
+        ];
+    }
 }
 
 class CommentForum extends Webboard

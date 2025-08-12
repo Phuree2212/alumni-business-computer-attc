@@ -35,6 +35,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
     $current_images = $_POST['current_images'];
     $deleted_images = $_POST['deleted_images'];
 
+    $password = $_POST['password'];
+
     if (!empty($deleted_images)) {     
         // Delete physical files using ImageUploader's deleteFile method
         $uploader = new ImageUploader('../../../assets/images/user/alumni');
@@ -60,7 +62,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 
     $result = $alumni->editAlumni($id, $student_code, $first_name, $last_name, $email, $phone, $education_level, 
             $graduation_year, $status_register, $current_job, $current_company, $current_salary, $new_image_files, $status_education,
-                                $address, $facebook, $instagram, $tiktok, $line);
+                                $address, $facebook, $instagram, $tiktok, $line, $password);
 
     echo json_encode($result);
     

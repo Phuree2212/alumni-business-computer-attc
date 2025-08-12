@@ -22,7 +22,6 @@ if ($_SERVER['REQUEST_METHOD'] == "GET" && (isset($_GET['group']) || isset($_GET
     $dashboard_view_website = $dashboard->getViewWebsite();
 }
 
-
 ?>
 <!DOCTYPE html>
 <html lang="th">

@@ -184,11 +184,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($start_d
                                     <td><?= $content ?></td>
                                     <td><?= $reported_at ?></td>
                                     <td class="text-center">
-                                        <button class="action-btn btn-outline-primary">
-                                            <a href="detail.php?id=<?php echo $id ?>"><i class="fa fa-eye"></i></a>
-                                        </button>
-                                        <button class="action-btn btn-outline-danger" onclick="deleteData(<?php echo $id ?>, 'id=<?php echo $id ?>', 'delete.php')">
-                                            <i class="fas fa-trash"></i>
+                                        
+                                        <a class="btn btn-primary" href="detail.php?id=<?php echo $id ?>">ดู</a>
+                                        
+                                        <button class="btn btn-danger" onclick="deleteData(<?php echo $id ?>, 'id=<?php echo $id ?>', 'delete.php')">
+                                            ลบ
                                         </button>
                                     </td>
                                 </tr>

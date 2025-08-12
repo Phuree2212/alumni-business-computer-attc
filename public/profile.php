@@ -424,30 +424,24 @@ $tiktok = !empty($detail['tiktok']) ? $detail['tiktok'] : "";;
               <span class="info-value">********</span>
             </div>
             <div class="info-row">
-              <span class="info-label">วันเกิด</span>
-              <span class="info-value">15 มีนาคม 2548 (อายุ 20 ปี)</span>
-            </div>
-            <div class="info-row">
               <span class="info-label"><?php echo $_SESSION['user']['user_type'] == USER_TYPE_ALUMNI ? 'ระดับชั้นที่จบการศึกษา' : 'ระดับชั้น' ?></span>
               <span class="info-value"><?php echo $education_level ?></span>
             </div>
-            <div class="info-row">
-              <span class="info-label">ปีที่จบการศึกษา</span>
-              <span class="info-value"><?php echo $graduation_year ?></span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">เกรดเฉลี่ย</span>
-              <span class="info-value">3.65</span>
-            </div>
+            <?php if ($_SESSION['user']['user_type'] == USER_TYPE_ALUMNI) { ?>
+              <div class="info-row">
+                <span class="info-label">ปีที่จบการศึกษา</span>
+                <span class="info-value"><?php echo $graduation_year ?></span>
+              </div>
+            <?php } ?>
             <div class="info-row">
               <span class="info-label">ประเภทผู้ใช้งาน</span>
               <span class="info-value"><?php echo $user_type == USER_TYPE_ALUMNI ? 'ศิษย์เก่า' : 'นักเรียน นักศึกษา' ?></span>
             </div>
-            <?php if($_SESSION['user']['user_type'] == USER_TYPE_ALUMNI){ ?>
-            <div class="info-row">
-              <span class="info-label">สถานะการศึกษาต่อ</span>
-              <span class="info-value <?php echo !empty($status_education) ? '' : 'text-danger' ?>"><?php echo !empty($status_education) ? $status_education : 'ยังไม่ได้กรอกข้อมูล' ?></span>
-            </div>
+            <?php if ($_SESSION['user']['user_type'] == USER_TYPE_ALUMNI) { ?>
+              <div class="info-row">
+                <span class="info-label">สถานะการศึกษาต่อ</span>
+                <span class="info-value <?php echo !empty($status_education) ? '' : 'text-danger' ?>"><?php echo !empty($status_education) ? $status_education : 'ยังไม่ได้กรอกข้อมูล' ?></span>
+              </div>
             <?php } ?>
             <div class="info-row">
               <span class="info-label">ที่อยู่</span>
@@ -591,25 +585,9 @@ $tiktok = !empty($detail['tiktok']) ? $detail['tiktok'] : "";;
               <div class="info-row">
                 <span class="info-label">รหัสนักศึกษา</span>
                 <div class="w-100">
-                  <input id="studentCode" name="student_code" type="text" class="form-control" value="<?php echo $student_code ?>"></input>
+                  <input id="studentCode" name="student_code" type="text" class="form-control" value="<?php echo $student_code ?>" readonly></input>
                   <div class="invalid-feedback"></div>
                 </div>
-              </div>
-              <div class="info-row">
-                <span class="info-label">รหัสผ่านเดิม</span>
-                <div class="w-100">
-                  <input name="password_old" type="password" class="form-control" placeholder="ถ้าไม่ต้องการเปลี่ยนรหัสผ่านให้เว้นว่าง"></input>
-                </div>
-              </div>
-              <div class="info-row">
-                <span class="info-label">รหัสผ่านใหม่</span>
-                <div class="w-100">
-                  <input name="password_new" type="password" class="form-control" placeholder="ถ้าไม่ต้องการเปลี่ยนรหัสผ่านให้เว้นว่าง"></input>
-                </div>
-              </div>
-              <div class="info-row">
-                <span class="info-label">วันเกิด</span>
-                <input name="birth_day" type="date" class="form-control"></input>
               </div>
               <div class="info-row">
                 <span class="info-label">ระดับการศึกษา</span>
@@ -626,24 +604,24 @@ $tiktok = !empty($detail['tiktok']) ? $detail['tiktok'] : "";;
                   <?php } ?>
                 </select>
               </div>
-              <div class="info-row">
-                <span class="info-label">ปีที่จบการศึกษา</span>
-                <input name="graduation_year" type="text" class="form-control" readonly value="<?php echo $graduation_year ?>"></input>
-              </div>
-              <div class="info-row">
-                <span class="info-label">เกรดเฉลี่ย</span>
-                <input type="number" name="gpa" value="3.78" class="form-control"></input>
-              </div>
-              <?php if($_SESSION['user']['user_type'] == USER_TYPE_ALUMNI){ ?>
-              <div class="info-row">
-                <span class="info-label">สถานะการศึกษาต่อ</span>
-                <select name="status_education" class="form-select">
-                  <option value="">เลือก</option>
-                  <option <?php echo $status_education == 'ศึกษาต่อ' ? 'selected' : '' ?> value="ศึกษาต่อ">ศึกษาต่อ</option>
-                  <option <?php echo $status_education == 'ทำงานแล้ว' ? 'selected' : '' ?> value="ทำงานแล้ว">ทำงานแล้ว</option>
-                  <option <?php echo $status_education == 'ว่างงาน' ? 'selected' : '' ?> value="ว่างงาน">ว่างงาน</option>
-                </select>
-              </div>
+              <?php if ($_SESSION['user']['user_type'] == USER_TYPE_ALUMNI) { ?>
+                <div class="info-row">
+                  <span class="info-label">ปีที่จบการศึกษา</span>
+                  <input name="graduation_year" type="text" class="form-control" readonly value="<?php echo $graduation_year ?>"></input>
+                </div>
+              <?php } else { ?>
+                <input name="graduation_year" type="hidden" class="form-control" readonly value="<?php echo $graduation_year ?>"></input>
+              <?php } ?>
+              <?php if ($_SESSION['user']['user_type'] == USER_TYPE_ALUMNI) { ?>
+                <div class="info-row">
+                  <span class="info-label">สถานะการศึกษาต่อ</span>
+                  <select name="status_education" class="form-select">
+                    <option value="">เลือก</option>
+                    <option <?php echo $status_education == 'ศึกษาต่อ' ? 'selected' : '' ?> value="ศึกษาต่อ">ศึกษาต่อ</option>
+                    <option <?php echo $status_education == 'ทำงานแล้ว' ? 'selected' : '' ?> value="ทำงานแล้ว">ทำงานแล้ว</option>
+                    <option <?php echo $status_education == 'ว่างงาน' ? 'selected' : '' ?> value="ว่างงาน">ว่างงาน</option>
+                  </select>
+                </div>
               <?php } ?>
               <div class="info-row">
                 <span class="info-label">ที่อยู่</span>

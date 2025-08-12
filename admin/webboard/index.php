@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($start_d
 <html lang="th">
 
 <head>
-    <?php include '../../includes/title.php'; ?>>
+    <?php include '../../includes/title.php'; ?>
     <link href="../../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="../../assets/css/bootstrap-icons.min.css" rel="stylesheet">
     <link href="../../assets/css/style_admin.css" rel="stylesheet">
@@ -220,11 +220,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($start_d
                                     <td><?= $user_type ?></td>
                                     <td><?= $created_at ?></td>
                                     <td class="text-center">
-                                        <button class="action-btn btn-outline-primary">
-                                            <a target="_blank" href="../../public/webboard/topic.php?id=<?php echo $id ?>"><i class="fa fa-eye"></i></a>
-                                        </button>
-                                        <button class="action-btn btn-outline-danger" onclick="deleteData(<?php echo $id ?>, 'id=<?php echo $id  ?>&image=<?php echo $string_image ?>', 'delete.php')">
-                                            <i class="fas fa-trash"></i>
+                                        
+                                        <a class="btn btn-primary" target="_blank" href="../../public/webboard/topic.php?id=<?php echo $id ?>">ดู</a>
+                                        <button class="btn btn-danger" onclick="deleteData(<?php echo $id ?>, 'id=<?php echo $id  ?>&image=<?php echo $string_image ?>', 'delete.php')">
+                                            ลบ
                                         </button>
                                     </td>
                                 </tr>

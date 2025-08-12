@@ -65,13 +65,13 @@ class Student extends User
 
     public function getTotalCount()
     {
-        $stmt = $this->conn->prepare("SELECT COUNT(*) FROM {$this->table} WHERE user_type = 'student' AND status_register = 1");
+        $stmt = $this->conn->prepare("SELECT COUNT(*) FROM {$this->table} WHERE user_type = 'student'");
         $stmt->execute();
         return $stmt->fetchColumn();
     }
     public function getAllStudent($limit, $offset)
     {
-        $stmt = $this->conn->prepare("SELECT * FROM {$this->table} WHERE user_type = 'student' AND status_register = 1 LIMIT :limit OFFSET :offset");
+        $stmt = $this->conn->prepare("SELECT * FROM {$this->table} WHERE user_type = 'student' LIMIT :limit OFFSET :offset");
         $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
         $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
@@ -79,15 +79,38 @@ class Student extends User
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function editStudent($id, $student_code, $first_name, $last_name, $email, $phone, $education_level, $status_register, $image, $address, $facebook, $instagram, $line, $tiktok)
+    public function editStudent($id, $student_code, $first_name, $last_name, $email, $phone, $education_level, $status_register, $image, $address, $facebook, $instagram, $line, $tiktok, $password = '')
     {
-        $result_check_duplicate = $this->checkDuplicate($id,$student_code, $email, $phone);
-        if(!$result_check_duplicate['result']){
+        $result_check_duplicate = $this->checkDuplicate($id, $student_code, $email, $phone);
+        if (!$result_check_duplicate['result']) {
             return $result_check_duplicate;
         }
 
-        $stmt = $this->conn->prepare("UPDATE {$this->table} SET student_code = :student_code, first_name = :first_name, last_name = :last_name, email = :email, phone = :phone, education_level = :education_level, status_register = :status_register
-                                      ,image = :image, address = :address, facebook = :facebook, instagram = :instagram, line = :line, tiktok = :tiktok WHERE user_id = :id");
+        // เริ่มคำสั่ง SQL พื้นฐาน
+        $sql = "UPDATE {$this->table} 
+            SET student_code = :student_code, 
+                first_name = :first_name, 
+                last_name = :last_name, 
+                email = :email, 
+                phone = :phone, 
+                education_level = :education_level, 
+                status_register = :status_register,
+                image = :image, 
+                address = :address, 
+                facebook = :facebook, 
+                instagram = :instagram, 
+                line = :line, 
+                tiktok = :tiktok";
+
+        // ถ้า password ไม่ว่าง ให้เพิ่มการอัปเดตรหัสผ่าน
+        if (!empty($password)) {
+            $sql .= ", password = :password";
+            $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+        }
+
+        $sql .= " WHERE user_id = :id";
+
+        $stmt = $this->conn->prepare($sql);
 
         $stmt->bindParam(':student_code', $student_code);
         $stmt->bindParam(':first_name', $first_name);
@@ -104,17 +127,25 @@ class Student extends User
         $stmt->bindParam(':line', $line);
         $stmt->bindParam(':tiktok', $tiktok);
 
+        if (!empty($password)) {
+            $stmt->bindParam(':password', $hashedPassword);
+        }
+
         $stmt->bindParam(':id', $id);
 
         $result = $stmt->execute();
 
-        return ['result' => $result, 'message' => $result ? 'อัปเดตข้อมูล ID ' . $id . ' สำเร้็จ' : 'อัปเดตข้อมูลไม่สำเร็จ เกิดข้อผิดพลาดขึ้นกับฐานข้อมูล'];
+        return [
+            'result' => $result,
+            'message' => $result ? 'อัปเดตข้อมูล ID ' . $id . ' สำเร็จ' : 'อัปเดตข้อมูลไม่สำเร็จ เกิดข้อผิดพลาดขึ้นกับฐานข้อมูล'
+        ];
     }
 
+
     //กรองข้อมูล
-    public function searchAndFilterStudent($keyword = '', $education_level = '', $start_date = '', $end_date = '', $limit = null, $offset = null)
+    public function searchAndFilterStudent($keyword = '', $education_level = '', $status_register = '', $start_date = '', $end_date = '', $limit = null, $offset = null)
     {
-        $sql = "SELECT * FROM {$this->table} WHERE user_type = 'student' AND status_register = 1";
+        $sql = "SELECT * FROM {$this->table} WHERE user_type = 'student'";
         $params = [];
 
         if (!empty($keyword)) {
@@ -125,6 +156,11 @@ class Student extends User
         if (!empty($education_level)) {
             $sql .= " AND education_level = :education_level";
             $params[':education_level'] = $education_level;
+        }
+
+        if ($status_register !== null && $status_register !== '') {
+            $sql .= " AND status_register = :status_register";
+            $params[':status_register'] = $status_register;
         }
 
         if (!empty($start_date)) {
@@ -159,9 +195,9 @@ class Student extends User
     }
 
     // นับการกรองข้อมูล
-    public function getSearchAndFilterCount($keyword = '', $education_level = 'ปวส.1', $start_date = '', $end_date = '')
+    public function getSearchAndFilterCount($keyword = '', $education_level = '', $status_register = '', $start_date = '', $end_date = '')
     {
-        $sql = "SELECT COUNT(*) FROM {$this->table} WHERE user_type = 'student' AND status_register = 1";
+        $sql = "SELECT COUNT(*) FROM {$this->table} WHERE user_type = 'student'";
         $params = [];
 
         if (!empty($keyword)) {
@@ -172,6 +208,11 @@ class Student extends User
         if (!empty($education_level)) {
             $sql .= " AND education_level = :education_level";
             $params[':education_level'] = $education_level;
+        }
+
+        if ($status_register !== null && $status_register !== '') {
+            $sql .= " AND status_register = :status_register";
+            $params[':status_register'] = $status_register;
         }
 
         if (!empty($start_date)) {

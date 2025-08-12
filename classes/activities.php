@@ -87,7 +87,10 @@ class Activities
     public function getAllActivity($limit = null, $offset = null)
     {
         if (isset($limit) && isset($offset)) {
-            $stmt = $this->conn->prepare("SELECT * FROM {$this->table} ORDER BY created_at DESC LIMIT :limit OFFSET :offset");
+            $stmt = $this->conn->prepare("SELECT ac.*, a.first_name, a.last_name FROM {$this->table} AS ac
+                                          LEFT JOIN admin as a ON ac.created_by = a.admin_id 
+                                          ORDER BY created_at DESC 
+                                          LIMIT :limit OFFSET :offset");
             $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
             $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
         } else {
@@ -108,7 +111,7 @@ class Activities
         $stmt->bindParam(':content', $content);
         $stmt->bindParam(':date', $date);
         $stmt->bindParam(':image', $image);
-        $stmt->bindParam(':created_by', $created_by);
+        $stmt->bindParam(':created_by', $created_by, PDO::PARAM_INT);
 
         return $stmt->execute();
     }

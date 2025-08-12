@@ -632,6 +632,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['id'])) {
 
     <script src="../../assets/js/bootstrap.min.js"></script>
     <script src="../../assets/alerts/modal.js"></script>
+    <script src="../function/validate_form.js"></script>
     <script src="../../assets/js/sweetalert2.all.min.js"></script>
 </body>
 <script>
@@ -652,7 +653,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['id'])) {
             replyCommentInput.classList.add('is-invalid');
             errorInput.textContent = 'กรุณากรอกข้อมูล';
             return;
-        } else {
+        }else if(hasBadWords(replyCommentInput.value)){
+            replyCommentInput.classList.add('is-invalid');
+            errorInput.textContent = 'เนื้อหามีคำไม่เหมาะสม กรุณาแก้ไข'
+            return;
+        } 
+        else {
             replyCommentInput.classList.remove('is-invalid');
             errorInput.textContent = '';
         }
@@ -733,6 +739,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['id'])) {
         if (!commentInput.value.trim()) {
             commentInput.classList.add('is-invalid');
             errorInput.textContent = 'กรุณากรอกข้อมูล';
+            return;
+        }
+
+        if (hasBadWords(commentInput.value)) {
+            commentInput.classList.add('is-invalid');
+            errorInput.textContent = 'เนื้อหามีคำไม่เหมาะสม กรุณาแก้ไข'
             return;
         }
 
