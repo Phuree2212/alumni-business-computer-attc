@@ -41,7 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (!empty($keyword) || !empty($educati
   // ดึงข่าวทั้งหมด
   $alumni_list = $alumni->getAllAlumni(
     $pagination->getLimit(),
-    $pagination->getOffset()
+    $pagination->getOffset(),
+    1
   );
 }
 

@@ -59,11 +59,26 @@ class Alumni extends User
         $stmt->execute();
         return $stmt->fetchColumn();
     }
-    public function getAllAlumni($limit, $offset)
+    public function getAllAlumni($limit, $offset, $status_register = '')
     {
-        $stmt = $this->conn->prepare("SELECT * FROM {$this->table} WHERE user_type = 'alumni' LIMIT :limit OFFSET :offset");
+        $sql = "SELECT * FROM {$this->table} WHERE user_type = 'alumni'";
+
+        // ถ้ามีการส่งค่า $status_register มา
+        if ($status_register !== '' && $status_register !== null) {
+            $sql .= " AND status_register = :status_register";
+        }
+
+        $sql .= " LIMIT :limit OFFSET :offset";
+
+        $stmt = $this->conn->prepare($sql);
+
+        if ($status_register !== '' && $status_register !== null) {
+            $stmt->bindParam(':status_register', $status_register, PDO::PARAM_INT);
+        }
+
         $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
         $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+
         $stmt->execute();
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
