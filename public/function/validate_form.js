@@ -9,7 +9,7 @@ function validatePhone(phone) {
 }
 
 function validateStudentCode(code) {
-    return code.length == 11 && /^[0-9]+$/.test(code);
+    return code.length >= 9 && /^[0-9]+$/.test(code);
 }
 
 function validatePassword(password) {
